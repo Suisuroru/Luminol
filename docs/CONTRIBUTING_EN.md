@@ -20,7 +20,7 @@ See also [This issue](https://github.com/isaacs/github/issues/1681), and then yo
 
 ## Development Environment
 
-Before coding, you need these softwares / tools as Dev Environment.
+Before coding, you need these pieces of software / tools as Dev Environment.
 
 - `git`
 - `JDK 17 or higher`
@@ -62,7 +62,7 @@ After pushing, you can open a PR to submit your patches.
 
 ## Modifying patches
 
-You can modify a existing patch by following the steps below:
+You can modify an existing patch by following the steps below:
 
 1. Modify code at HEAD
 2. Run `git commit -a --fixup <hash>` in your terminal to make a fix-up commit (PS: do not commit changes of luminol-created files)
