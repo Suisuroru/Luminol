@@ -39,9 +39,9 @@ If you have forked the main repository, then you should follow the steps below:
 
 1. Clone your repository to local
 2. Run Gradle's `applyAllPatches` task in your IDE or terminal (You can run `./gradlew applyAllPatches` directly in terminal.)
-3. Enter `*-api` and `*-server` directory to carry out modifications.
+3. Enter `luminol-api` and `luminol-server` directory to carry out modifications.
 
-BTW, `*-api` and `*-server` and are not normal git repositories.
+BTW, `luminol-api` and `luminol-server` and are not normal git repositories.
 
 - Before applying patches, the base will point to unmodified source code.
 - Every commit after the base is a patch.
@@ -51,7 +51,7 @@ BTW, `*-api` and `*-server` and are not normal git repositories.
 
 It's very easy to add patches by following the steps below:
 
-1. Modify the code of `*-api` and `*-server`
+1. Modify the code of `luminol-api` and `luminol-server`
 2. Add these changes to the local git repository (For example, `git add .`)
 3. Commit these changes using `git commit -m <Commit Message>` (PS: do not commit new-created files)
 4. Run Gradle's task `rebuildAllServerPatches` to convert your commits to a new patch
