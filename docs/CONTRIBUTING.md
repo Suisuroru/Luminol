@@ -62,7 +62,7 @@ Luminol 使用和 Folia 一样的补丁系统，并为了针对不同部分的�
 你可以使用以下方法来修改一个补丁的内容：
 
 1. 在 HEAD 上直接进行修改；
-2. 使用 `git commit -a --fixup <hash>` 来进行一个更正提交；
+2. 使用 `git commit -a --fixup <hash>` 来进行一个更正提交；（不要提交对在luminol新建文件的修改）
    - 如果你想要更改提交信息，你也可以用 `--squash` 来代替 `--fixup`。
 3. 使用 `git rebase -i --autosquash base` 来进行自动变基，你只需要输入 `:q` 来关闭确认页面即可；
 4. 运行 Gradle 任务 `rebuildAllServerPatches` 来修改已被修改的补丁；
