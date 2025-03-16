@@ -23,7 +23,7 @@ See also [This issue](https://github.com/isaacs/github/issues/1681), and then yo
 Before coding, you need these pieces of software / tools as Dev Environment.
 
 - `git`
-- `JDK 17 or higher`
+- `JDK 21 or higher`
 
 ## Understanding "Patches"
 
