@@ -29,7 +29,7 @@
 +
 +    @ConfigInfo(baseName = "skip-height-check", comments =
 +            """
-+                    disable y <= 96 check.""")
++                    Disable y <= 96 check.""")
 +    public static boolean height_check = false;
 +
 +    @Override
