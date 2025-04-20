@@ -1,11 +1,11 @@
 From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: violetc <58360096+s-yh-china@users.noreply.github.com>
 Date: Sun, 6 Apr 2025 10:42:46 +0800
-Subject: [PATCH] Fix SculkCatalyst exp skip
+Subject: [PATCH] Leaves Fix SculkCatalyst exp skip
 
 
 diff --git a/src/main/java/org/bukkit/craftbukkit/event/CraftEventFactory.java b/src/main/java/org/bukkit/craftbukkit/event/CraftEventFactory.java
-index fa122a6a0c56cab95d366618845c3afd2654def7..2c61032304461cecd0843dec15ef06492ba23f7a 100644
+index bef7a026676ab59a84fc33c8af50ad2b9447fd8c..0a678458bcee4ced98d2880821dbff302f59b7f6 100644
 --- a/src/main/java/org/bukkit/craftbukkit/event/CraftEventFactory.java
 +++ b/src/main/java/org/bukkit/craftbukkit/event/CraftEventFactory.java
 @@ -991,7 +991,7 @@ public class CraftEventFactory {
@@ -25,7 +25,7 @@ index fa122a6a0c56cab95d366618845c3afd2654def7..2c61032304461cecd0843dec15ef0649
          lootCheck.run(); // Paper - advancement triggers before destroying items
  
          // Paper start - Restore vanilla drops behavior
-@@ -1041,6 +1042,7 @@ public class CraftEventFactory {
+@@ -1037,6 +1038,7 @@ public class CraftEventFactory {
          victim.newLevel = event.getNewLevel();
          victim.newTotalExp = event.getNewTotalExp();
          victim.expToDrop = event.getDroppedExp();

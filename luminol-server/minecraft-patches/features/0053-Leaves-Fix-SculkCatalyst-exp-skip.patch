@@ -1,11 +1,11 @@
 From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: violetc <58360096+s-yh-china@users.noreply.github.com>
 Date: Sun, 6 Apr 2025 10:42:45 +0800
-Subject: [PATCH] Fix SculkCatalyst exp skip
+Subject: [PATCH] Leaves Fix SculkCatalyst exp skip
 
 
 diff --git a/net/minecraft/world/entity/LivingEntity.java b/net/minecraft/world/entity/LivingEntity.java
-index b1b738bcd20cbc927bdbac6ab10e28f79fd8a23b..e61e5c5b3777c8861f090ada2a4ddaaf88116329 100644
+index af903ff99441e56402278dfab069a056ce54b6c3..ca610a9ed7f8bb5e92504731df9d1678e46f0c7b 100644
 --- a/net/minecraft/world/entity/LivingEntity.java
 +++ b/net/minecraft/world/entity/LivingEntity.java
 @@ -293,6 +293,7 @@ public abstract class LivingEntity extends Entity implements Attackable {
@@ -16,7 +16,7 @@ index b1b738bcd20cbc927bdbac6ab10e28f79fd8a23b..e61e5c5b3777c8861f090ada2a4ddaaf
      public ArrayList<DefaultDrop> drops = new ArrayList<>(); // Paper - Restore vanilla drops behavior
      public final org.bukkit.craftbukkit.attribute.CraftAttributeMap craftAttributes;
      public boolean collides = true;
-@@ -1743,6 +1744,7 @@ public abstract class LivingEntity extends Entity implements Attackable {
+@@ -1761,6 +1762,7 @@ public abstract class LivingEntity extends Entity implements Attackable {
                          entity.killedEntity((ServerLevel) this.level(), this);
                      }
                      this.gameEvent(GameEvent.ENTITY_DIE);
@@ -24,7 +24,7 @@ index b1b738bcd20cbc927bdbac6ab10e28f79fd8a23b..e61e5c5b3777c8861f090ada2a4ddaaf
                  } else {
                      this.dead = false;
                      this.setHealth((float) deathEvent.getReviveHealth());
-@@ -1817,7 +1819,7 @@ public abstract class LivingEntity extends Entity implements Attackable {
+@@ -1835,7 +1837,7 @@ public abstract class LivingEntity extends Entity implements Attackable {
          this.drops = new ArrayList<>();
          // this.dropEquipment(level); // CraftBukkit - moved up
          // CraftBukkit end
@@ -34,7 +34,7 @@ index b1b738bcd20cbc927bdbac6ab10e28f79fd8a23b..e61e5c5b3777c8861f090ada2a4ddaaf
      }
  
 diff --git a/net/minecraft/world/level/block/entity/SculkCatalystBlockEntity.java b/net/minecraft/world/level/block/entity/SculkCatalystBlockEntity.java
-index 1638eccef431fb68775af624110f1968f0c6dabd..117748f385cecabef890d27af55d88abee6adf4b 100644
+index bd6693af6412fb08a28ca9a71d5c70d54f72c6e6..8c2e35d087150fb0fc67c7457a4af9298f4b41e1 100644
 --- a/net/minecraft/world/level/block/entity/SculkCatalystBlockEntity.java
 +++ b/net/minecraft/world/level/block/entity/SculkCatalystBlockEntity.java
 @@ -96,8 +96,7 @@ public class SculkCatalystBlockEntity extends BlockEntity implements GameEventLi
