@@ -1,7 +1,7 @@
 From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: violetc <58360096+s-yh-china@users.noreply.github.com>
 Date: Sun, 6 Apr 2025 10:42:47 +0800
-Subject: [PATCH] Fix SculkCatalyst exp skip
+Subject: [PATCH] Leaves Fix SculkCatalyst exp skip
 
 
 diff --git a/src/main/java/org/bukkit/event/entity/EntityDeathEvent.java b/src/main/java/org/bukkit/event/entity/EntityDeathEvent.java
