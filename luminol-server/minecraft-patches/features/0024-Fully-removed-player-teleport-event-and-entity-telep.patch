@@ -31,7 +31,7 @@ index a107d9ee24d0e39ce3e3e09bf27af1ea4ae35b96..e786177f9e36c1dfb0cdcfc641ab2e36
  
      public void teleport(Location dest) {
 diff --git a/net/minecraft/world/entity/LivingEntity.java b/net/minecraft/world/entity/LivingEntity.java
-index 6258b008ad3e00d41e9f3014572d6f7a06b1847c..8f4e6a3fb60771803fd91afb5c116a38bd974bd6 100644
+index 6258b008ad3e00d41e9f3014572d6f7a06b1847c..9f49e02056a539c495a77a003aeb2a89df5ffcbd 100644
 --- a/net/minecraft/world/entity/LivingEntity.java
 +++ b/net/minecraft/world/entity/LivingEntity.java
 @@ -4189,10 +4189,10 @@ public abstract class LivingEntity extends Entity implements Attackable {
@@ -39,11 +39,11 @@ index 6258b008ad3e00d41e9f3014572d6f7a06b1847c..8f4e6a3fb60771803fd91afb5c116a38
      public boolean randomTeleport(double x, double y, double z, boolean broadcastTeleport) {
          // CraftBukkit start
 -        return this.randomTeleport(x, y, z, broadcastTeleport, org.bukkit.event.player.PlayerTeleportEvent.TeleportCause.UNKNOWN).orElse(false);
-+        return this.randomTeleport(x, y, z, broadcastTeleport, org.bukkit.event.player.PlayerTeleportEvent.TeleportCause.UNKNOWN, true).orElse(false);
++        return this.randomTeleport(x, y, z, broadcastTeleport, org.bukkit.event.player.PlayerTeleportEvent.TeleportCause.UNKNOWN, true).orElse(false); // Luminol - Fix #78 temporally
      }
  
 -    public Optional<Boolean> randomTeleport(double x, double y, double z, boolean broadcastTeleport, org.bukkit.event.player.PlayerTeleportEvent.TeleportCause cause) {
-+    public Optional<Boolean> randomTeleport(double x, double y, double z, boolean broadcastTeleport, org.bukkit.event.player.PlayerTeleportEvent.TeleportCause cause, boolean flagRandom) {
++    public Optional<Boolean> randomTeleport(double x, double y, double z, boolean broadcastTeleport, org.bukkit.event.player.PlayerTeleportEvent.TeleportCause cause, boolean flagRandom) { // Luminol - Fix #78 temporally
          // CraftBukkit end
          double x1 = this.getX();
          double y1 = this.getY();
@@ -52,12 +52,12 @@ index 6258b008ad3e00d41e9f3014572d6f7a06b1847c..8f4e6a3fb60771803fd91afb5c116a38
  
                  if (flag) {
 -                    if (!(this instanceof ServerPlayer)) {
-+                    if (!(this instanceof ServerPlayer) && flagRandom) { // Luminol - Fully remove EntityTeleportEvent and PlayerTeleportEvent
++                    if (!(this instanceof ServerPlayer) && flagRandom) { // Luminol - Fully remove EntityTeleportEvent and PlayerTeleportEvent // Luminol - Fix #78 temporally
                          EntityTeleportEvent teleport = new EntityTeleportEvent(this.getBukkitEntity(), new Location(this.level().getWorld(), x1, y1, z1), new Location(this.level().getWorld(), x, d, z));
                          this.level().getCraftServer().getPluginManager().callEvent(teleport);
                          if (!teleport.isCancelled() && teleport.getTo() != null) { // Paper
 diff --git a/net/minecraft/world/item/consume_effects/TeleportRandomlyConsumeEffect.java b/net/minecraft/world/item/consume_effects/TeleportRandomlyConsumeEffect.java
-index ee22f8b4e76019fd3b09b62a1b19ab6e949dc56f..39a55f6735389ab968f0ca5cb2ffd716298705d4 100644
+index ee22f8b4e76019fd3b09b62a1b19ab6e949dc56f..d20ee0e946dd3ff5040fbb52d56d2d8f55cd636e 100644
 --- a/net/minecraft/world/item/consume_effects/TeleportRandomlyConsumeEffect.java
 +++ b/net/minecraft/world/item/consume_effects/TeleportRandomlyConsumeEffect.java
 @@ -56,7 +56,7 @@ public record TeleportRandomlyConsumeEffect(float diameter) implements ConsumeEf
@@ -65,7 +65,7 @@ index ee22f8b4e76019fd3b09b62a1b19ab6e949dc56f..39a55f6735389ab968f0ca5cb2ffd716
              Vec3 vec3 = entity.position();
              // CraftBukkit start - handle canceled status of teleport event
 -            java.util.Optional<Boolean> status = entity.randomTeleport(d, d1, d2, true, org.bukkit.event.player.PlayerTeleportEvent.TeleportCause.CHORUS_FRUIT);
-+            java.util.Optional<Boolean> status = entity.randomTeleport(d, d1, d2, true, org.bukkit.event.player.PlayerTeleportEvent.TeleportCause.CHORUS_FRUIT, false);
++            java.util.Optional<Boolean> status = entity.randomTeleport(d, d1, d2, true, org.bukkit.event.player.PlayerTeleportEvent.TeleportCause.CHORUS_FRUIT, false); // Luminol - Fix #78 temporally
  
              // teleport event was canceled, no more tries
              if (status.isEmpty()) break;
