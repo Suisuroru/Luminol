@@ -5,10 +5,10 @@ Subject: [PATCH] Leaves Fix SculkCatalyst exp skip
 
 
 diff --git a/net/minecraft/server/level/ServerPlayer.java b/net/minecraft/server/level/ServerPlayer.java
-index c2562b8f7ca3bc815a5abe5ae00a6fe1654b002d..884d338e00017ff351b91c70fb51186cbdfb1fe6 100644
+index 98ce0736c18cbb09704ef7ca6b67866d5736f7c7..d0853f44f1b4c88ba62a74db9e49a32709685425 100644
 --- a/net/minecraft/server/level/ServerPlayer.java
 +++ b/net/minecraft/server/level/ServerPlayer.java
-@@ -1346,7 +1346,7 @@ public class ServerPlayer extends Player implements ca.spottedleaf.moonrise.patc
+@@ -1358,7 +1358,7 @@ public class ServerPlayer extends Player implements ca.spottedleaf.moonrise.patc
          }
  
          // SPIGOT-5478 must be called manually now
@@ -17,7 +17,7 @@ index c2562b8f7ca3bc815a5abe5ae00a6fe1654b002d..884d338e00017ff351b91c70fb51186c
          // we clean the player's inventory after the EntityDeathEvent is called so plugins can get the exact state of the inventory.
          if (!event.getKeepInventory()) {
              // Paper start - PlayerDeathEvent#getItemsToKeep
-@@ -1380,6 +1380,15 @@ public class ServerPlayer extends Player implements ca.spottedleaf.moonrise.patc
+@@ -1392,6 +1392,15 @@ public class ServerPlayer extends Player implements ca.spottedleaf.moonrise.patc
          this.setClientLoaded(false);
      }
  
@@ -34,7 +34,7 @@ index c2562b8f7ca3bc815a5abe5ae00a6fe1654b002d..884d338e00017ff351b91c70fb51186c
          AABB aabb = new AABB(this.blockPosition()).inflate(32.0, 10.0, 32.0);
          this.level()
 diff --git a/net/minecraft/world/entity/LivingEntity.java b/net/minecraft/world/entity/LivingEntity.java
-index ff98aafff934877834ed6cc737fe1183122f3ab3..06b3608705161a86ec7f064653cdba53a4091a3f 100644
+index 2293c3db45e9ecce4e0d4b2f87b8e90228e44d94..658aa09aecf8d64145feedb82dc9be2a55201450 100644
 --- a/net/minecraft/world/entity/LivingEntity.java
 +++ b/net/minecraft/world/entity/LivingEntity.java
 @@ -293,6 +293,7 @@ public abstract class LivingEntity extends Entity implements Attackable {
@@ -45,7 +45,7 @@ index ff98aafff934877834ed6cc737fe1183122f3ab3..06b3608705161a86ec7f064653cdba53
      public ArrayList<DefaultDrop> drops = new ArrayList<>(); // Paper - Restore vanilla drops behavior
      public final org.bukkit.craftbukkit.attribute.CraftAttributeMap craftAttributes;
      public boolean collides = true;
-@@ -1786,6 +1787,7 @@ public abstract class LivingEntity extends Entity implements Attackable {
+@@ -1761,6 +1762,7 @@ public abstract class LivingEntity extends Entity implements Attackable {
                          entity.killedEntity((ServerLevel) this.level(), this);
                      }
                      this.gameEvent(GameEvent.ENTITY_DIE);
@@ -53,7 +53,7 @@ index ff98aafff934877834ed6cc737fe1183122f3ab3..06b3608705161a86ec7f064653cdba53
                  } else {
                      this.dead = false;
                      this.setHealth((float) deathEvent.getReviveHealth());
-@@ -1860,7 +1862,7 @@ public abstract class LivingEntity extends Entity implements Attackable {
+@@ -1835,7 +1837,7 @@ public abstract class LivingEntity extends Entity implements Attackable {
          this.drops = new ArrayList<>();
          // this.dropEquipment(level); // CraftBukkit - moved up
          // CraftBukkit end
