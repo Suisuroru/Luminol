@@ -44,10 +44,10 @@ index d0853f44f1b4c88ba62a74db9e49a32709685425..d62b2f21bd577d9026a74f2303a12579
      private boolean shouldDropExperience(boolean eventResult, boolean forceUseEvent) {
          if (forceUseEvent) {
 diff --git a/net/minecraft/world/entity/LivingEntity.java b/net/minecraft/world/entity/LivingEntity.java
-index 1df158d30622ea71fcc937140c682d0e994d54c1..837323ce9ecff5e76605afbb1188d61f89287560 100644
+index 06b3608705161a86ec7f064653cdba53a4091a3f..2b248eb8c82f0c6cc21094ddfc139ef598a89416 100644
 --- a/net/minecraft/world/entity/LivingEntity.java
 +++ b/net/minecraft/world/entity/LivingEntity.java
-@@ -1831,6 +1831,13 @@ public abstract class LivingEntity extends Entity implements Attackable {
+@@ -1856,6 +1856,13 @@ public abstract class LivingEntity extends Entity implements Attackable {
              final LivingEntity entityliving = this.getKillCredit();
              if (entityliving != null) {
                  entityliving.awardKillScore(this, damageSource);
@@ -61,7 +61,7 @@ index 1df158d30622ea71fcc937140c682d0e994d54c1..837323ce9ecff5e76605afbb1188d61f
              }
          }); // Paper end
          this.postDeathDropItems(deathEvent); // Paper
-@@ -1841,6 +1848,18 @@ public abstract class LivingEntity extends Entity implements Attackable {
+@@ -1866,6 +1873,18 @@ public abstract class LivingEntity extends Entity implements Attackable {
          return deathEvent; // Paper
      }
  
@@ -80,7 +80,7 @@ index 1df158d30622ea71fcc937140c682d0e994d54c1..837323ce9ecff5e76605afbb1188d61f
      protected void dropEquipment(ServerLevel level) {
      }
      protected void postDeathDropItems(org.bukkit.event.entity.EntityDeathEvent event) {} // Paper - method for post death logic that cannot be ran before the event is potentially cancelled
-@@ -2474,6 +2493,18 @@ public abstract class LivingEntity extends Entity implements Attackable {
+@@ -2499,6 +2518,18 @@ public abstract class LivingEntity extends Entity implements Attackable {
          }
      }
  

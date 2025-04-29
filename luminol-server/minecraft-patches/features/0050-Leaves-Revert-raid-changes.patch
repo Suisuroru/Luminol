@@ -20,6 +20,42 @@ index 80f17f33f670018240c854df589cf90cdeab6e70..8672757a4d5fb5c247599782fece6b8d
              Raid raidAt = level.getRaidAt(serverPlayer.blockPosition());
              if (raidAt == null || raidAt.getRaidOmenLevel() < raidAt.getMaxRaidOmenLevel()) {
                  serverPlayer.addEffect(new MobEffectInstance(MobEffects.RAID_OMEN, 600, amplifier));
+diff --git a/net/minecraft/world/entity/LivingEntity.java b/net/minecraft/world/entity/LivingEntity.java
+index 2293c3db45e9ecce4e0d4b2f87b8e90228e44d94..85781002aedf0a4d6d17e861248755189153e6dd 100644
+--- a/net/minecraft/world/entity/LivingEntity.java
++++ b/net/minecraft/world/entity/LivingEntity.java
+@@ -1180,6 +1180,31 @@ public abstract class LivingEntity extends Entity implements Attackable {
+         }
+     }
+ 
++    // Luminol Start - raid revert adapt Cross Region Damage trace
++    public boolean addEffect(MobEffectInstance effectInstance, @Nullable Entity entity, EntityPotionEffectEvent.Cause cause, boolean fireEvent, boolean async) {
++        if (ca.spottedleaf.moonrise.common.util.TickThread.isTickThreadFor(entity)) {
++            return addEffect(effectInstance, entity, org.bukkit.event.entity.EntityPotionEffectEvent.Cause.PATROL_CAPTAIN, true);
++        } else {
++            postToEntityThreadAddEffect(effectInstance, entity, org.bukkit.event.entity.EntityPotionEffectEvent.Cause.PATROL_CAPTAIN, true);
++            return true;
++        }
++    }
++
++    private void postToEntityThreadAddEffect(MobEffectInstance effectInstance, @Nullable Entity entity, EntityPotionEffectEvent.Cause cause, boolean fireEvent) {
++        io.papermc.paper.threadedregions.RegionizedServer.getInstance().taskQueue.queueTickTaskQueue(
++                (ServerLevel)entity.level(),
++                ca.spottedleaf.moonrise.common.util.CoordinateUtils.getChunkX(entity.position()), ca.spottedleaf.moonrise.common.util.CoordinateUtils.getChunkZ(entity.position()),
++                () -> {
++                    try {
++                        addEffect(effectInstance, entity, cause, fireEvent);
++                    } catch (Throwable ex) {
++                        LOGGER.error(ex.toString(), ex);
++                    }
++                }
++        );
++    }
++    // Luminol End - raid revert adapt Cross Region Damage trace
++
+     public boolean canBeAffected(MobEffectInstance effectInstance) {
+         if (this.getType().is(EntityTypeTags.IMMUNE_TO_INFESTED)) {
+             return !effectInstance.is(MobEffects.INFESTED);
 diff --git a/net/minecraft/world/entity/raid/Raid.java b/net/minecraft/world/entity/raid/Raid.java
 index 2f45befbb50645f1bfb5961ad725f3670ff0d592..4e2ec7f7946a70b676393f090c5ce6219314c3da 100644
 --- a/net/minecraft/world/entity/raid/Raid.java
@@ -107,7 +143,7 @@ index 2f45befbb50645f1bfb5961ad725f3670ff0d592..4e2ec7f7946a70b676393f090c5ce621
                  if (!this.level.isVillage(mutableBlockPos) || i <= 7) {
                      int i4 = 10;
 diff --git a/net/minecraft/world/entity/raid/Raider.java b/net/minecraft/world/entity/raid/Raider.java
-index 7c385baae81b9a987c0e1e4deb017884600331bc..262291eaeb9bc250affeda67957588d14ec1eebc 100644
+index 7c385baae81b9a987c0e1e4deb017884600331bc..aeeb62bb496a428d5871f25577663c5dee02cf83 100644
 --- a/net/minecraft/world/entity/raid/Raider.java
 +++ b/net/minecraft/world/entity/raid/Raider.java
 @@ -125,6 +125,43 @@ public abstract class Raider extends PatrollingMonster {
@@ -144,7 +180,7 @@ index 7c385baae81b9a987c0e1e4deb017884600331bc..262291eaeb9bc250affeda67957588d1
 +                        net.minecraft.world.effect.MobEffectInstance mobeffect1 = new net.minecraft.world.effect.MobEffectInstance(net.minecraft.world.effect.MobEffects.BAD_OMEN, me.earthme.luminol.config.modules.misc.RaidChangesConfig.infinite ? net.minecraft.world.effect.MobEffectInstance.INFINITE_DURATION : 120000, i, false, false, true);
 +
 +                        if (!serverLevel.getGameRules().getBoolean(net.minecraft.world.level.GameRules.RULE_DISABLE_RAIDS)) {
-+                            entityhuman.addEffect(mobeffect1, org.bukkit.event.entity.EntityPotionEffectEvent.Cause.PATROL_CAPTAIN); // CraftBukkit
++                            entityhuman.addEffect(mobeffect1, entityhuman, org.bukkit.event.entity.EntityPotionEffectEvent.Cause.PATROL_CAPTAIN, true, true); // CraftBukkit // Luminol - raid revert adapt Cross Region Damage trace
 +                        }
 +                        this.setPatrolLeader(false);
 +                    }
