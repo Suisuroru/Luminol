@@ -5,7 +5,7 @@ Subject: [PATCH] Cross Region Damage trace
 
 
 diff --git a/net/minecraft/server/level/ServerPlayer.java b/net/minecraft/server/level/ServerPlayer.java
-index d0853f44f1b4c88ba62a74db9e49a32709685425..ac8353216c10f8d87a7a25e1338aed686490f139 100644
+index d0853f44f1b4c88ba62a74db9e49a32709685425..e1945ab589b216261b841f20bdf4a8a65d64bb82 100644
 --- a/net/minecraft/server/level/ServerPlayer.java
 +++ b/net/minecraft/server/level/ServerPlayer.java
 @@ -1378,6 +1378,13 @@ public class ServerPlayer extends Player implements ca.spottedleaf.moonrise.patc
@@ -34,7 +34,7 @@ index d0853f44f1b4c88ba62a74db9e49a32709685425..ac8353216c10f8d87a7a25e1338aed68
 +                nmsEntity.awardKillScore(this, cause);
 +                this.createWitherRose(nmsEntity);
 +            } catch (Throwable ex) {
-+                LOGGER.error(ex.toString(), ex);
++                LOGGER.error(ex.getMessage(), ex);
 +            }
 +        }, null, 1L );
 +    }
@@ -44,7 +44,7 @@ index d0853f44f1b4c88ba62a74db9e49a32709685425..ac8353216c10f8d87a7a25e1338aed68
      private boolean shouldDropExperience(boolean eventResult, boolean forceUseEvent) {
          if (forceUseEvent) {
 diff --git a/net/minecraft/world/entity/LivingEntity.java b/net/minecraft/world/entity/LivingEntity.java
-index 3e227c644072bfe9ec16078adc2b685edfee83c6..a9b3b3f594f11215060b370c338b1fedd97a6787 100644
+index 3e227c644072bfe9ec16078adc2b685edfee83c6..a38dcae4e22f26bf299da8bd469004262ccc2c3e 100644
 --- a/net/minecraft/world/entity/LivingEntity.java
 +++ b/net/minecraft/world/entity/LivingEntity.java
 @@ -141,7 +141,6 @@ import org.slf4j.Logger;
@@ -87,7 +87,7 @@ index 3e227c644072bfe9ec16078adc2b685edfee83c6..a9b3b3f594f11215060b370c338b1fed
 +            try {
 +                nmsEntity.awardKillScore(this, damageSource);
 +            } catch (Throwable ex) {
-+                LOGGER.error(ex.toString(), ex);
++                LOGGER.error(ex.getMessage(), ex);
 +            }
 +        }, null, 1L );
 +    }
