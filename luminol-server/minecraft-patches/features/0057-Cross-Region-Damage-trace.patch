@@ -44,10 +44,39 @@ index d0853f44f1b4c88ba62a74db9e49a32709685425..e1945ab589b216261b841f20bdf4a8a6
      private boolean shouldDropExperience(boolean eventResult, boolean forceUseEvent) {
          if (forceUseEvent) {
 diff --git a/net/minecraft/world/entity/LivingEntity.java b/net/minecraft/world/entity/LivingEntity.java
-index 58c28101b3d0bbb7d80b8c42a861712ddd1d10ec..3a5a2d7b91a1abb952bb6e1a72b77de3cd3dac39 100644
+index 1df158d30622ea71fcc937140c682d0e994d54c1..3a5a2d7b91a1abb952bb6e1a72b77de3cd3dac39 100644
 --- a/net/minecraft/world/entity/LivingEntity.java
 +++ b/net/minecraft/world/entity/LivingEntity.java
-@@ -1853,6 +1853,13 @@ public abstract class LivingEntity extends Entity implements Attackable {
+@@ -1181,6 +1181,28 @@ public abstract class LivingEntity extends Entity implements Attackable {
+         }
+     }
+ 
++    // Luminol Start - raid revert adapt Cross Region Damage trace
++    public boolean addEffect(MobEffectInstance effectInstance, @Nullable Entity entity, EntityPotionEffectEvent.Cause cause, boolean fireEvent, boolean async) {
++        if (ca.spottedleaf.moonrise.common.util.TickThread.isTickThreadFor(entity)) {
++            return addEffect(effectInstance, entity, org.bukkit.event.entity.EntityPotionEffectEvent.Cause.PATROL_CAPTAIN, true);
++        } else {
++            postToEntityThreadAddEffect(effectInstance, entity, org.bukkit.event.entity.EntityPotionEffectEvent.Cause.PATROL_CAPTAIN, true);
++            return true;
++        }
++    }
++
++    private void postToEntityThreadAddEffect(MobEffectInstance effectInstance, @Nullable Entity entity, EntityPotionEffectEvent.Cause cause, boolean fireEvent) {
++        if (entity != null)
++            entity.getBukkitEntity().taskScheduler.schedule((Entity nmsEntity) -> {
++                try {
++                    addEffect(effectInstance, nmsEntity, cause, fireEvent);
++                } catch (Throwable ex) {
++                    LOGGER.error(ex.getMessage(), ex);
++                }
++            }, null, 1L );
++    }
++    // Luminol End - raid revert adapt Cross Region Damage trace
++
+     public boolean canBeAffected(MobEffectInstance effectInstance) {
+         if (this.getType().is(EntityTypeTags.IMMUNE_TO_INFESTED)) {
+             return !effectInstance.is(MobEffects.INFESTED);
+@@ -1831,6 +1853,13 @@ public abstract class LivingEntity extends Entity implements Attackable {
              final LivingEntity entityliving = this.getKillCredit();
              if (entityliving != null) {
                  entityliving.awardKillScore(this, damageSource);
@@ -61,7 +90,7 @@ index 58c28101b3d0bbb7d80b8c42a861712ddd1d10ec..3a5a2d7b91a1abb952bb6e1a72b77de3
              }
          }); // Paper end
          this.postDeathDropItems(deathEvent); // Paper
-@@ -1863,6 +1870,18 @@ public abstract class LivingEntity extends Entity implements Attackable {
+@@ -1841,6 +1870,18 @@ public abstract class LivingEntity extends Entity implements Attackable {
          return deathEvent; // Paper
      }
  
@@ -80,7 +109,7 @@ index 58c28101b3d0bbb7d80b8c42a861712ddd1d10ec..3a5a2d7b91a1abb952bb6e1a72b77de3
      protected void dropEquipment(ServerLevel level) {
      }
      protected void postDeathDropItems(org.bukkit.event.entity.EntityDeathEvent event) {} // Paper - method for post death logic that cannot be ran before the event is potentially cancelled
-@@ -2496,6 +2515,18 @@ public abstract class LivingEntity extends Entity implements Attackable {
+@@ -2474,6 +2515,18 @@ public abstract class LivingEntity extends Entity implements Attackable {
          }
      }
  
@@ -99,3 +128,16 @@ index 58c28101b3d0bbb7d80b8c42a861712ddd1d10ec..3a5a2d7b91a1abb952bb6e1a72b77de3
      public final float getMaxHealth() {
          return (float)this.getAttributeValue(Attributes.MAX_HEALTH);
      }
+diff --git a/net/minecraft/world/item/component/OminousBottleAmplifier.java b/net/minecraft/world/item/component/OminousBottleAmplifier.java
+index 5607d2f21131510563f8fdc9079d1145483b11df..f709880a8c1064298aa133617055e7aa5cc2be5e 100644
+--- a/net/minecraft/world/item/component/OminousBottleAmplifier.java
++++ b/net/minecraft/world/item/component/OminousBottleAmplifier.java
+@@ -28,7 +28,7 @@ public record OminousBottleAmplifier(int value) implements ConsumableListener, T
+ 
+     @Override
+     public void onConsume(Level level, LivingEntity entity, ItemStack stack, Consumable consumable) {
+-        entity.addEffect(new MobEffectInstance(MobEffects.BAD_OMEN, 120000, this.value, false, false, true)); // Paper - properly resend entities - diff on change for below
++        entity.addEffect(new MobEffectInstance(MobEffects.BAD_OMEN, me.earthme.luminol.config.modules.misc.RaidChangesConfig.infinite ? net.minecraft.world.effect.MobEffectInstance.INFINITE_DURATION : 120000, this.value, false, false, true)); // Paper - properly resend entities - diff on change for below // Luminol - Raid effect infinite
+     }
+ 
+     // Paper start - properly resend entities - collect packets for bundle

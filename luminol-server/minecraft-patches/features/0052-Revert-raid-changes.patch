@@ -20,39 +20,6 @@ index 80f17f33f670018240c854df589cf90cdeab6e70..8672757a4d5fb5c247599782fece6b8d
              Raid raidAt = level.getRaidAt(serverPlayer.blockPosition());
              if (raidAt == null || raidAt.getRaidOmenLevel() < raidAt.getMaxRaidOmenLevel()) {
                  serverPlayer.addEffect(new MobEffectInstance(MobEffects.RAID_OMEN, 600, amplifier));
-diff --git a/net/minecraft/world/entity/LivingEntity.java b/net/minecraft/world/entity/LivingEntity.java
-index 658aa09aecf8d64145feedb82dc9be2a55201450..166a58ed88e1097cfe440c547e058588379a1641 100644
---- a/net/minecraft/world/entity/LivingEntity.java
-+++ b/net/minecraft/world/entity/LivingEntity.java
-@@ -1181,6 +1181,28 @@ public abstract class LivingEntity extends Entity implements Attackable {
-         }
-     }
- 
-+    // Luminol Start - raid revert adapt Cross Region Damage trace
-+    public boolean addEffect(MobEffectInstance effectInstance, @Nullable Entity entity, EntityPotionEffectEvent.Cause cause, boolean fireEvent, boolean async) {
-+        if (ca.spottedleaf.moonrise.common.util.TickThread.isTickThreadFor(entity)) {
-+            return addEffect(effectInstance, entity, org.bukkit.event.entity.EntityPotionEffectEvent.Cause.PATROL_CAPTAIN, true);
-+        } else {
-+            postToEntityThreadAddEffect(effectInstance, entity, org.bukkit.event.entity.EntityPotionEffectEvent.Cause.PATROL_CAPTAIN, true);
-+            return true;
-+        }
-+    }
-+
-+    private void postToEntityThreadAddEffect(MobEffectInstance effectInstance, @Nullable Entity entity, EntityPotionEffectEvent.Cause cause, boolean fireEvent) {
-+        if (entity != null)
-+            entity.getBukkitEntity().taskScheduler.schedule((Entity nmsEntity) -> {
-+                try {
-+                    addEffect(effectInstance, nmsEntity, cause, fireEvent);
-+                } catch (Throwable ex) {
-+                    LOGGER.error(ex.getMessage(), ex);
-+                }
-+            }, null, 1L );
-+    }
-+    // Luminol End - raid revert adapt Cross Region Damage trace
-+
-     public boolean canBeAffected(MobEffectInstance effectInstance) {
-         if (this.getType().is(EntityTypeTags.IMMUNE_TO_INFESTED)) {
-             return !effectInstance.is(MobEffects.INFESTED);
 diff --git a/net/minecraft/world/entity/raid/Raid.java b/net/minecraft/world/entity/raid/Raid.java
 index 2f45befbb50645f1bfb5961ad725f3670ff0d592..0d91ae860a5c506c634e88341d958618996cc5bc 100644
 --- a/net/minecraft/world/entity/raid/Raid.java
@@ -216,18 +183,9 @@ index 7c385baae81b9a987c0e1e4deb017884600331bc..75a8e0602c249df4b587a454e35f4cd7
  
      public boolean hasActiveRaid() {
 diff --git a/net/minecraft/world/item/component/OminousBottleAmplifier.java b/net/minecraft/world/item/component/OminousBottleAmplifier.java
-index 318f24d67be4daf6993ba547da0540be9c221a75..f709880a8c1064298aa133617055e7aa5cc2be5e 100644
+index 318f24d67be4daf6993ba547da0540be9c221a75..5607d2f21131510563f8fdc9079d1145483b11df 100644
 --- a/net/minecraft/world/item/component/OminousBottleAmplifier.java
 +++ b/net/minecraft/world/item/component/OminousBottleAmplifier.java
-@@ -28,7 +28,7 @@ public record OminousBottleAmplifier(int value) implements ConsumableListener, T
- 
-     @Override
-     public void onConsume(Level level, LivingEntity entity, ItemStack stack, Consumable consumable) {
--        entity.addEffect(new MobEffectInstance(MobEffects.BAD_OMEN, 120000, this.value, false, false, true)); // Paper - properly resend entities - diff on change for below
-+        entity.addEffect(new MobEffectInstance(MobEffects.BAD_OMEN, me.earthme.luminol.config.modules.misc.RaidChangesConfig.infinite ? net.minecraft.world.effect.MobEffectInstance.INFINITE_DURATION : 120000, this.value, false, false, true)); // Paper - properly resend entities - diff on change for below // Luminol - Raid effect infinite
-     }
- 
-     // Paper start - properly resend entities - collect packets for bundle
 @@ -40,7 +40,7 @@ public record OminousBottleAmplifier(int value) implements ConsumableListener, T
  
      @Override
