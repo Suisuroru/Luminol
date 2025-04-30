@@ -57,7 +57,7 @@ index 658aa09aecf8d64145feedb82dc9be2a55201450..7cf8219cef49aa6e5662a65ba91ed7e4
          if (this.getType().is(EntityTypeTags.IMMUNE_TO_INFESTED)) {
              return !effectInstance.is(MobEffects.INFESTED);
 diff --git a/net/minecraft/world/entity/raid/Raid.java b/net/minecraft/world/entity/raid/Raid.java
-index 2f45befbb50645f1bfb5961ad725f3670ff0d592..4e2ec7f7946a70b676393f090c5ce6219314c3da 100644
+index 2f45befbb50645f1bfb5961ad725f3670ff0d592..a4b867ddcd58ffa758e94d039a55727395dcc437 100644
 --- a/net/minecraft/world/entity/raid/Raid.java
 +++ b/net/minecraft/world/entity/raid/Raid.java
 @@ -109,6 +109,12 @@ public class Raid {
@@ -138,12 +138,12 @@ index 2f45befbb50645f1bfb5961ad725f3670ff0d592..4e2ec7f7946a70b676393f090c5ce621
              int i3 = this.center.getZ() + Mth.floor(Mth.sin(f2) * 32.0F * f) + this.level.random.nextInt(3) * Mth.floor(f);
              int height = this.level.getHeight(Heightmap.Types.WORLD_SURFACE, i2, i3);
 -            if (Mth.abs(height - this.center.getY()) <= 96) {
-+            if (me.earthme.luminol.config.modules.misc.RaidChangesConfig.height_check || Mth.abs(height - this.center.getY()) <= 96) { // Disable height check
++            if (me.earthme.luminol.config.modules.misc.RaidChangesConfig.height_check || Mth.abs(height - this.center.getY()) <= 96) { // Leaves - Disable height check
                  mutableBlockPos.set(i2, height, i3);
                  if (!this.level.isVillage(mutableBlockPos) || i <= 7) {
                      int i4 = 10;
 diff --git a/net/minecraft/world/entity/raid/Raider.java b/net/minecraft/world/entity/raid/Raider.java
-index 7c385baae81b9a987c0e1e4deb017884600331bc..aeeb62bb496a428d5871f25577663c5dee02cf83 100644
+index 7c385baae81b9a987c0e1e4deb017884600331bc..75a8e0602c249df4b587a454e35f4cd7eab2a25c 100644
 --- a/net/minecraft/world/entity/raid/Raider.java
 +++ b/net/minecraft/world/entity/raid/Raider.java
 @@ -125,6 +125,43 @@ public abstract class Raider extends PatrollingMonster {
@@ -180,7 +180,7 @@ index 7c385baae81b9a987c0e1e4deb017884600331bc..aeeb62bb496a428d5871f25577663c5d
 +                        net.minecraft.world.effect.MobEffectInstance mobeffect1 = new net.minecraft.world.effect.MobEffectInstance(net.minecraft.world.effect.MobEffects.BAD_OMEN, me.earthme.luminol.config.modules.misc.RaidChangesConfig.infinite ? net.minecraft.world.effect.MobEffectInstance.INFINITE_DURATION : 120000, i, false, false, true);
 +
 +                        if (!serverLevel.getGameRules().getBoolean(net.minecraft.world.level.GameRules.RULE_DISABLE_RAIDS)) {
-+                            entityhuman.addEffect(mobeffect1, entityhuman, org.bukkit.event.entity.EntityPotionEffectEvent.Cause.PATROL_CAPTAIN, true, true); // CraftBukkit // Luminol - raid revert adapt Cross Region Damage trace
++                            entityhuman.addEffect(mobeffect1, entityhuman, org.bukkit.event.entity.EntityPotionEffectEvent.Cause.PATROL_CAPTAIN, true, true); // CraftBukkit // Luminol - Raid revert adapt Cross Region Damage trace
 +                        }
 +                        this.setPatrolLeader(false);
 +                    }
@@ -200,7 +200,7 @@ index 7c385baae81b9a987c0e1e4deb017884600331bc..aeeb62bb496a428d5871f25577663c5d
  
      public boolean hasActiveRaid() {
 diff --git a/net/minecraft/world/item/component/OminousBottleAmplifier.java b/net/minecraft/world/item/component/OminousBottleAmplifier.java
-index 318f24d67be4daf6993ba547da0540be9c221a75..9a6820fce3977419fd81d802720c318ac15d07c4 100644
+index 318f24d67be4daf6993ba547da0540be9c221a75..f709880a8c1064298aa133617055e7aa5cc2be5e 100644
 --- a/net/minecraft/world/item/component/OminousBottleAmplifier.java
 +++ b/net/minecraft/world/item/component/OminousBottleAmplifier.java
 @@ -28,7 +28,7 @@ public record OminousBottleAmplifier(int value) implements ConsumableListener, T
@@ -208,7 +208,7 @@ index 318f24d67be4daf6993ba547da0540be9c221a75..9a6820fce3977419fd81d802720c318a
      @Override
      public void onConsume(Level level, LivingEntity entity, ItemStack stack, Consumable consumable) {
 -        entity.addEffect(new MobEffectInstance(MobEffects.BAD_OMEN, 120000, this.value, false, false, true)); // Paper - properly resend entities - diff on change for below
-+        entity.addEffect(new MobEffectInstance(MobEffects.BAD_OMEN, me.earthme.luminol.config.modules.misc.RaidChangesConfig.infinite ? net.minecraft.world.effect.MobEffectInstance.INFINITE_DURATION : 120000, this.value, false, false, true)); // Paper - properly resend entities - diff on change for below
++        entity.addEffect(new MobEffectInstance(MobEffects.BAD_OMEN, me.earthme.luminol.config.modules.misc.RaidChangesConfig.infinite ? net.minecraft.world.effect.MobEffectInstance.INFINITE_DURATION : 120000, this.value, false, false, true)); // Paper - properly resend entities - diff on change for below // Luminol - Raid effect infinite
      }
  
      // Paper start - properly resend entities - collect packets for bundle
@@ -217,7 +217,7 @@ index 318f24d67be4daf6993ba547da0540be9c221a75..9a6820fce3977419fd81d802720c318a
      @Override
      public void addToTooltip(Item.TooltipContext context, Consumer<Component> tooltipAdder, TooltipFlag tooltipFlag) {
 -        List<MobEffectInstance> list = List.of(new MobEffectInstance(MobEffects.BAD_OMEN, 120000, this.value, false, false, true));
-+        List<MobEffectInstance> list = List.of(new MobEffectInstance(MobEffects.BAD_OMEN, me.earthme.luminol.config.modules.misc.RaidChangesConfig.infinite ? net.minecraft.world.effect.MobEffectInstance.INFINITE_DURATION : 120000, this.value, false, false, true));
++        List<MobEffectInstance> list = List.of(new MobEffectInstance(MobEffects.BAD_OMEN, me.earthme.luminol.config.modules.misc.RaidChangesConfig.infinite ? net.minecraft.world.effect.MobEffectInstance.INFINITE_DURATION : 120000, this.value, false, false, true)); // Luminol - Raid effect infinite
          PotionContents.addPotionTooltip(list, tooltipAdder, 1.0F, context.tickRate());
      }
  }
