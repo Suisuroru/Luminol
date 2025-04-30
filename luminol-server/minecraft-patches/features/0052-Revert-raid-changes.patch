@@ -21,7 +21,7 @@ index 80f17f33f670018240c854df589cf90cdeab6e70..8672757a4d5fb5c247599782fece6b8d
              if (raidAt == null || raidAt.getRaidOmenLevel() < raidAt.getMaxRaidOmenLevel()) {
                  serverPlayer.addEffect(new MobEffectInstance(MobEffects.RAID_OMEN, 600, amplifier));
 diff --git a/net/minecraft/world/entity/LivingEntity.java b/net/minecraft/world/entity/LivingEntity.java
-index 658aa09aecf8d64145feedb82dc9be2a55201450..2053441e3a756d9b8ef2ced1e66c82b1f46ab23a 100644
+index 658aa09aecf8d64145feedb82dc9be2a55201450..166a58ed88e1097cfe440c547e058588379a1641 100644
 --- a/net/minecraft/world/entity/LivingEntity.java
 +++ b/net/minecraft/world/entity/LivingEntity.java
 @@ -1181,6 +1181,28 @@ public abstract class LivingEntity extends Entity implements Attackable {
@@ -44,7 +44,7 @@ index 658aa09aecf8d64145feedb82dc9be2a55201450..2053441e3a756d9b8ef2ced1e66c82b1
 +                try {
 +                    addEffect(effectInstance, nmsEntity, cause, fireEvent);
 +                } catch (Throwable ex) {
-+                    LOGGER.error(ex.toString(), ex);
++                    LOGGER.error(ex.getMessage(), ex);
 +                }
 +            }, null, 1L );
 +    }
@@ -54,7 +54,7 @@ index 658aa09aecf8d64145feedb82dc9be2a55201450..2053441e3a756d9b8ef2ced1e66c82b1
          if (this.getType().is(EntityTypeTags.IMMUNE_TO_INFESTED)) {
              return !effectInstance.is(MobEffects.INFESTED);
 diff --git a/net/minecraft/world/entity/raid/Raid.java b/net/minecraft/world/entity/raid/Raid.java
-index 2f45befbb50645f1bfb5961ad725f3670ff0d592..0312448f37aa7f8659544435bc162dd91c249b0c 100644
+index 2f45befbb50645f1bfb5961ad725f3670ff0d592..0d91ae860a5c506c634e88341d958618996cc5bc 100644
 --- a/net/minecraft/world/entity/raid/Raid.java
 +++ b/net/minecraft/world/entity/raid/Raid.java
 @@ -325,7 +325,20 @@ public class Raid {
@@ -87,7 +87,7 @@ index 2f45befbb50645f1bfb5961ad725f3670ff0d592..0312448f37aa7f8659544435bc162dd9
 +                    // Luminol Start - Raid revert
 +                    BlockPos blockPos;
 +                    if (!me.earthme.luminol.config.modules.misc.RaidChangesConfig.pos_revert) {
-+                    blockPos = this.waveSpawnPos.orElseGet(() -> this.findRandomSpawnPos(20));
++                        blockPos = this.waveSpawnPos.orElseGet(() -> this.findRandomSpawnPos(20));
 +                    } else {
 +                        blockPos = this.waveSpawnPos.isPresent() ? this.waveSpawnPos.get() : this.findRandomSpawnPos(i, 20);
 +                    }

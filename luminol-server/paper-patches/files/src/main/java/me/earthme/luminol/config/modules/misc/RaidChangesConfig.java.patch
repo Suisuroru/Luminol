@@ -39,7 +39,7 @@
 +                        --- this config is not old version's function""")
 +    public static boolean self_check = false;
 +
-+    @ConfigInfo(baseName = "revert_274911", comments =
++    @ConfigInfo(baseName = "revert-274911", comments =
 +            """
 +                    Revert Old raid's find spawn position logic
 +                        --- This revert MC-274911""")
