@@ -37,11 +37,11 @@
 +                        --- this config is not old version's function""")
 +    public static boolean self_check = false;
 +
-+    @ConfigInfo(baseName = "revert-274911", comments =
++    @ConfigInfo(baseName = "revert_274911", comments =
 +            """
-+                    Revert MC-274911(hard-revert)
-+                        --- maybe have some bugs""")
-+    public static boolean revert_274911 = false;
++                    Revert Old raid's find spawn position logic
++                        --- This revert MC-274911""")
++    public static boolean pos_revert = false;
 +
 +    @Override
 +    public EnumConfigCategory getCategory() {
