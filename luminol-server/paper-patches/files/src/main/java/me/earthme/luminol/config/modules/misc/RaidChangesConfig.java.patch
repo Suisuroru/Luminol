@@ -1,6 +1,6 @@
 --- /dev/null
 +++ b/src/main/java/me/earthme/luminol/config/modules/misc/RaidChangesConfig.java
-@@ -1,0 +_,52 @@
+@@ -1,0 +_,54 @@
 +package me.earthme.luminol.config.modules.misc;
 +
 +import me.earthme.luminol.config.ConfigInfo;
@@ -28,7 +28,9 @@
 +
 +    @ConfigInfo(baseName = "skip-height-check", comments =
 +            """
-+                    Disable y <= 96 check""")
++                    Disable y <= 96 check.
++                    If you enabled revert_274911, this config will useless
++                    and always behavior of enabled""")
 +    public static boolean height_check = false;
 +
 +    @ConfigInfo(baseName = "skip-self-raid-check", comments =

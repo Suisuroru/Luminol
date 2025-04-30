@@ -21,10 +21,10 @@ index 80f17f33f670018240c854df589cf90cdeab6e70..8672757a4d5fb5c247599782fece6b8d
              if (raidAt == null || raidAt.getRaidOmenLevel() < raidAt.getMaxRaidOmenLevel()) {
                  serverPlayer.addEffect(new MobEffectInstance(MobEffects.RAID_OMEN, 600, amplifier));
 diff --git a/net/minecraft/world/entity/LivingEntity.java b/net/minecraft/world/entity/LivingEntity.java
-index 658aa09aecf8d64145feedb82dc9be2a55201450..7cf8219cef49aa6e5662a65ba91ed7e4830e8124 100644
+index 658aa09aecf8d64145feedb82dc9be2a55201450..2053441e3a756d9b8ef2ced1e66c82b1f46ab23a 100644
 --- a/net/minecraft/world/entity/LivingEntity.java
 +++ b/net/minecraft/world/entity/LivingEntity.java
-@@ -1181,6 +1181,31 @@ public abstract class LivingEntity extends Entity implements Attackable {
+@@ -1181,6 +1181,28 @@ public abstract class LivingEntity extends Entity implements Attackable {
          }
      }
  
@@ -39,17 +39,14 @@ index 658aa09aecf8d64145feedb82dc9be2a55201450..7cf8219cef49aa6e5662a65ba91ed7e4
 +    }
 +
 +    private void postToEntityThreadAddEffect(MobEffectInstance effectInstance, @Nullable Entity entity, EntityPotionEffectEvent.Cause cause, boolean fireEvent) {
-+        io.papermc.paper.threadedregions.RegionizedServer.getInstance().taskQueue.queueTickTaskQueue(
-+                (ServerLevel)entity.level(),
-+                ca.spottedleaf.moonrise.common.util.CoordinateUtils.getChunkX(entity.position()), ca.spottedleaf.moonrise.common.util.CoordinateUtils.getChunkZ(entity.position()),
-+                () -> {
-+                    try {
-+                        addEffect(effectInstance, entity, cause, fireEvent);
-+                    } catch (Throwable ex) {
-+                        LOGGER.error(ex.toString(), ex);
-+                    }
++        if (entity != null)
++            entity.getBukkitEntity().taskScheduler.schedule((Entity nmsEntity) -> {
++                try {
++                    addEffect(effectInstance, nmsEntity, cause, fireEvent);
++                } catch (Throwable ex) {
++                    LOGGER.error(ex.toString(), ex);
 +                }
-+        );
++            }, null, 1L );
 +    }
 +    // Luminol End - raid revert adapt Cross Region Damage trace
 +
@@ -57,7 +54,7 @@ index 658aa09aecf8d64145feedb82dc9be2a55201450..7cf8219cef49aa6e5662a65ba91ed7e4
          if (this.getType().is(EntityTypeTags.IMMUNE_TO_INFESTED)) {
              return !effectInstance.is(MobEffects.INFESTED);
 diff --git a/net/minecraft/world/entity/raid/Raid.java b/net/minecraft/world/entity/raid/Raid.java
-index 2f45befbb50645f1bfb5961ad725f3670ff0d592..9e9ba80e8a232ad4d76e8c0bfbb52563c3e542d9 100644
+index 2f45befbb50645f1bfb5961ad725f3670ff0d592..0312448f37aa7f8659544435bc162dd91c249b0c 100644
 --- a/net/minecraft/world/entity/raid/Raid.java
 +++ b/net/minecraft/world/entity/raid/Raid.java
 @@ -325,7 +325,20 @@ public class Raid {
@@ -134,14 +131,14 @@ index 2f45befbb50645f1bfb5961ad725f3670ff0d592..9e9ba80e8a232ad4d76e8c0bfbb52563
                  mutableBlockPos.set(i2, height, i3);
                  if (!this.level.isVillage(mutableBlockPos) || i <= 7) {
                      int i4 = 10;
-@@ -694,6 +725,27 @@ public class Raid {
+@@ -694,6 +725,26 @@ public class Raid {
          return null;
      }
  
 +    // Luminol Start - Raid revert
 +    @Nullable
 +    private BlockPos findRandomSpawnPos(int n, int n2) {
-+        int n3 = n == 0 ? 2 : 2 - n;
++        int n3 = 2 - n;
 +        BlockPos.MutableBlockPos mutableBlockPos = new BlockPos.MutableBlockPos();
 +        SpawnPlacementType spawnPlacementType = SpawnPlacements.getPlacementType(EntityType.RAVAGER);
 +        for (int i = 0; i < n2; ++i) {
@@ -151,7 +148,6 @@ index 2f45befbb50645f1bfb5961ad725f3670ff0d592..9e9ba80e8a232ad4d76e8c0bfbb52563
 +            int n6 = this.level.getHeight(Heightmap.Types.WORLD_SURFACE, n4, n5);
 +            mutableBlockPos.set(n4, n6, n5);
 +            if (this.level.isVillage(mutableBlockPos) && n < 2) continue;
-+            int n7 = 10;
 +            if (!this.level.hasChunksAt(mutableBlockPos.getX() - 10, mutableBlockPos.getZ() - 10, mutableBlockPos.getX() + 10, mutableBlockPos.getZ() + 10) || !this.level.isPositionEntityTicking(mutableBlockPos) || !spawnPlacementType.isSpawnPositionOk(this.level, mutableBlockPos, EntityType.RAVAGER) && (!this.level.getBlockState((BlockPos)mutableBlockPos.below()).is(Blocks.SNOW) || !this.level.getBlockState(mutableBlockPos).isAir())) continue;
 +            return mutableBlockPos;
 +        }
