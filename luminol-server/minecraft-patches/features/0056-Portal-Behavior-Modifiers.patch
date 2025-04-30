@@ -5,7 +5,7 @@ Subject: [PATCH] Portal Behavior Modifiers
 
 
 diff --git a/net/minecraft/world/entity/Entity.java b/net/minecraft/world/entity/Entity.java
-index ceca76a5791e319dd7cc4048c9860b1df065b95a..51cad9bbf446d193f85a897c33115dfcd0305f57 100644
+index 4a0d07a3263704a7c6e6859ddcbe767c202ed794..5f30ea9ed5c0feb7272d35f0f5c0b748f2aebcd6 100644
 --- a/net/minecraft/world/entity/Entity.java
 +++ b/net/minecraft/world/entity/Entity.java
 @@ -3304,7 +3304,7 @@ public abstract class Entity implements SyncedDataHolder, Nameable, EntityAccess
@@ -51,7 +51,7 @@ index ceca76a5791e319dd7cc4048c9860b1df065b95a..51cad9bbf446d193f85a897c33115dfc
  
          public void addTracker() {
              for (final EntityTreeNode node : this.getFullTree()) {
-@@ -4545,6 +4552,12 @@ public abstract class Entity implements SyncedDataHolder, Nameable, EntityAccess
+@@ -4557,6 +4564,12 @@ public abstract class Entity implements SyncedDataHolder, Nameable, EntityAccess
  
      }
  
@@ -64,7 +64,7 @@ index ceca76a5791e319dd7cc4048c9860b1df065b95a..51cad9bbf446d193f85a897c33115dfc
      protected boolean portalToAsync(ServerLevel destination, BlockPos portalPos, boolean takePassengers,
                                      PortalType type, java.util.function.Consumer<Entity> teleportComplete) {
          ca.spottedleaf.moonrise.common.util.TickThread.ensureTickThread(this, "Cannot portal entity async");
-@@ -4628,6 +4641,8 @@ public abstract class Entity implements SyncedDataHolder, Nameable, EntityAccess
+@@ -4640,6 +4653,8 @@ public abstract class Entity implements SyncedDataHolder, Nameable, EntityAccess
                          info.postTeleportTransition().onTransition(teleported);
                      }
  
