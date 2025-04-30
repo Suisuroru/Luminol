@@ -5,7 +5,7 @@ Subject: [PATCH] Cross Region Damage trace
 
 
 diff --git a/net/minecraft/server/level/ServerPlayer.java b/net/minecraft/server/level/ServerPlayer.java
-index d0853f44f1b4c88ba62a74db9e49a32709685425..e1945ab589b216261b841f20bdf4a8a65d64bb82 100644
+index d0853f44f1b4c88ba62a74db9e49a32709685425..aa9b426b848dcc3ce010a58ff5aff291af7a7926 100644
 --- a/net/minecraft/server/level/ServerPlayer.java
 +++ b/net/minecraft/server/level/ServerPlayer.java
 @@ -1378,6 +1378,13 @@ public class ServerPlayer extends Player implements ca.spottedleaf.moonrise.patc
@@ -13,7 +13,7 @@ index d0853f44f1b4c88ba62a74db9e49a32709685425..e1945ab589b216261b841f20bdf4a8a6
              killCredit.awardKillScore(this, cause);
              this.createWitherRose(killCredit);
 +        // Luminol Start - Cross Region Damage trace
-+        } else {
++        } else if (me.earthme.luminol.config.modules.experiment.EntityDamageSourceTraceConfig.enabled) {
 +            final LivingEntity entitylivingnew = this.getKillCreditOrigin();
 +            if (entitylivingnew != null) {
 +                this.damageTransferToAsync(entitylivingnew, cause);
@@ -44,10 +44,10 @@ index d0853f44f1b4c88ba62a74db9e49a32709685425..e1945ab589b216261b841f20bdf4a8a6
      private boolean shouldDropExperience(boolean eventResult, boolean forceUseEvent) {
          if (forceUseEvent) {
 diff --git a/net/minecraft/world/entity/LivingEntity.java b/net/minecraft/world/entity/LivingEntity.java
-index 1df158d30622ea71fcc937140c682d0e994d54c1..3a5a2d7b91a1abb952bb6e1a72b77de3cd3dac39 100644
+index 1df158d30622ea71fcc937140c682d0e994d54c1..4eddc407d04428516dc3607e4726d3ff58588c62 100644
 --- a/net/minecraft/world/entity/LivingEntity.java
 +++ b/net/minecraft/world/entity/LivingEntity.java
-@@ -1181,6 +1181,28 @@ public abstract class LivingEntity extends Entity implements Attackable {
+@@ -1181,6 +1181,29 @@ public abstract class LivingEntity extends Entity implements Attackable {
          }
      }
  
@@ -55,10 +55,11 @@ index 1df158d30622ea71fcc937140c682d0e994d54c1..3a5a2d7b91a1abb952bb6e1a72b77de3
 +    public boolean addEffect(MobEffectInstance effectInstance, @Nullable Entity entity, EntityPotionEffectEvent.Cause cause, boolean fireEvent, boolean async) {
 +        if (ca.spottedleaf.moonrise.common.util.TickThread.isTickThreadFor(entity)) {
 +            return addEffect(effectInstance, entity, org.bukkit.event.entity.EntityPotionEffectEvent.Cause.PATROL_CAPTAIN, true);
-+        } else {
++        } else if (me.earthme.luminol.config.modules.experiment.EntityDamageSourceTraceConfig.enabled) {
 +            postToEntityThreadAddEffect(effectInstance, entity, org.bukkit.event.entity.EntityPotionEffectEvent.Cause.PATROL_CAPTAIN, true);
 +            return true;
 +        }
++        return false;
 +    }
 +
 +    private void postToEntityThreadAddEffect(MobEffectInstance effectInstance, @Nullable Entity entity, EntityPotionEffectEvent.Cause cause, boolean fireEvent) {
@@ -76,12 +77,12 @@ index 1df158d30622ea71fcc937140c682d0e994d54c1..3a5a2d7b91a1abb952bb6e1a72b77de3
      public boolean canBeAffected(MobEffectInstance effectInstance) {
          if (this.getType().is(EntityTypeTags.IMMUNE_TO_INFESTED)) {
              return !effectInstance.is(MobEffects.INFESTED);
-@@ -1831,6 +1853,13 @@ public abstract class LivingEntity extends Entity implements Attackable {
+@@ -1831,6 +1854,13 @@ public abstract class LivingEntity extends Entity implements Attackable {
              final LivingEntity entityliving = this.getKillCredit();
              if (entityliving != null) {
                  entityliving.awardKillScore(this, damageSource);
 +            // Luminol Start - Cross Region Damage trace
-+            } else {
++            } else if (me.earthme.luminol.config.modules.experiment.EntityDamageSourceTraceConfig.enabled) {
 +                final LivingEntity entitylivingnew = this.getKillCreditOrigin();
 +                if (entitylivingnew != null) {
 +                    this.damageTransferToAsync(entitylivingnew, damageSource);
@@ -90,7 +91,7 @@ index 1df158d30622ea71fcc937140c682d0e994d54c1..3a5a2d7b91a1abb952bb6e1a72b77de3
              }
          }); // Paper end
          this.postDeathDropItems(deathEvent); // Paper
-@@ -1841,6 +1870,18 @@ public abstract class LivingEntity extends Entity implements Attackable {
+@@ -1841,6 +1871,18 @@ public abstract class LivingEntity extends Entity implements Attackable {
          return deathEvent; // Paper
      }
  
@@ -109,7 +110,7 @@ index 1df158d30622ea71fcc937140c682d0e994d54c1..3a5a2d7b91a1abb952bb6e1a72b77de3
      protected void dropEquipment(ServerLevel level) {
      }
      protected void postDeathDropItems(org.bukkit.event.entity.EntityDeathEvent event) {} // Paper - method for post death logic that cannot be ran before the event is potentially cancelled
-@@ -2474,6 +2515,18 @@ public abstract class LivingEntity extends Entity implements Attackable {
+@@ -2474,6 +2516,18 @@ public abstract class LivingEntity extends Entity implements Attackable {
          }
      }
  
