@@ -5,7 +5,7 @@ Subject: [PATCH] Cross Region Damage trace
 
 
 diff --git a/net/minecraft/server/level/ServerPlayer.java b/net/minecraft/server/level/ServerPlayer.java
-index d0853f44f1b4c88ba62a74db9e49a32709685425..d62b2f21bd577d9026a74f2303a125799ca6825d 100644
+index d0853f44f1b4c88ba62a74db9e49a32709685425..ac8353216c10f8d87a7a25e1338aed686490f139 100644
 --- a/net/minecraft/server/level/ServerPlayer.java
 +++ b/net/minecraft/server/level/ServerPlayer.java
 @@ -1378,6 +1378,13 @@ public class ServerPlayer extends Player implements ca.spottedleaf.moonrise.patc
@@ -16,7 +16,7 @@ index d0853f44f1b4c88ba62a74db9e49a32709685425..d62b2f21bd577d9026a74f2303a12579
 +        } else {
 +            final LivingEntity entitylivingnew = this.getKillCreditOrigin();
 +            if (entitylivingnew != null) {
-+                this.damageTransferToQueue(entitylivingnew, cause);
++                this.damageTransferToAsync(entitylivingnew, cause);
 +            }
 +        // Luminol End - Cross Region Damage trace
          }
@@ -27,16 +27,16 @@ index d0853f44f1b4c88ba62a74db9e49a32709685425..d62b2f21bd577d9026a74f2303a12579
      }
  
 +    // Luminol Start - Cross Region Damage trace
-+    private void damageTransferToQueue(LivingEntity entity, DamageSource cause) {
-+        io.papermc.paper.threadedregions.RegionizedServer.getInstance().taskQueue.queueTickTaskQueue(
-+                (ServerLevel)entity.level(),
-+                ca.spottedleaf.moonrise.common.util.CoordinateUtils.getChunkX(entity.position()), ca.spottedleaf.moonrise.common.util.CoordinateUtils.getChunkZ(entity.position()),
-+                () -> {
-+                    this.awardStat(Stats.ENTITY_KILLED_BY.get(entity.getType()));
-+                    entity.awardKillScore(this, cause);
-+                    this.createWitherRose(entity);
-+                }
-+        );
++    private void damageTransferToAsync(LivingEntity entity, DamageSource cause) {
++        entity.getBukkitEntity().taskScheduler.schedule((LivingEntity nmsEntity) -> {
++            try {
++                this.awardStat(Stats.ENTITY_KILLED_BY.get(nmsEntity.getType()));
++                nmsEntity.awardKillScore(this, cause);
++                this.createWitherRose(nmsEntity);
++            } catch (Throwable ex) {
++                LOGGER.error(ex.toString(), ex);
++            }
++        }, null, 1L );
 +    }
 +    // Luminol End - Cross Region Damage trace
 +
@@ -44,10 +44,26 @@ index d0853f44f1b4c88ba62a74db9e49a32709685425..d62b2f21bd577d9026a74f2303a12579
      private boolean shouldDropExperience(boolean eventResult, boolean forceUseEvent) {
          if (forceUseEvent) {
 diff --git a/net/minecraft/world/entity/LivingEntity.java b/net/minecraft/world/entity/LivingEntity.java
-index 06b3608705161a86ec7f064653cdba53a4091a3f..2b248eb8c82f0c6cc21094ddfc139ef598a89416 100644
+index 3e227c644072bfe9ec16078adc2b685edfee83c6..a9b3b3f594f11215060b370c338b1fedd97a6787 100644
 --- a/net/minecraft/world/entity/LivingEntity.java
 +++ b/net/minecraft/world/entity/LivingEntity.java
-@@ -1856,6 +1856,13 @@ public abstract class LivingEntity extends Entity implements Attackable {
+@@ -141,7 +141,6 @@ import org.slf4j.Logger;
+ // CraftBukkit start
+ import java.util.ArrayList;
+ import java.util.HashSet;
+-import java.util.Set;
+ import java.util.LinkedList;
+ import java.util.UUID;
+ import net.minecraft.world.item.component.Consumable;
+@@ -152,7 +151,6 @@ import org.bukkit.craftbukkit.inventory.CraftItemStack;
+ import org.bukkit.event.entity.ArrowBodyCountChangeEvent;
+ import org.bukkit.event.entity.EntityDamageEvent;
+ import org.bukkit.event.entity.EntityDamageEvent.DamageModifier;
+-import org.bukkit.event.entity.EntityKnockbackEvent;
+ import org.bukkit.event.entity.EntityPotionEffectEvent;
+ import org.bukkit.event.entity.EntityRegainHealthEvent;
+ import org.bukkit.event.entity.EntityRemoveEvent;
+@@ -1853,6 +1851,13 @@ public abstract class LivingEntity extends Entity implements Attackable {
              final LivingEntity entityliving = this.getKillCredit();
              if (entityliving != null) {
                  entityliving.awardKillScore(this, damageSource);
@@ -55,32 +71,32 @@ index 06b3608705161a86ec7f064653cdba53a4091a3f..2b248eb8c82f0c6cc21094ddfc139ef5
 +            } else {
 +                final LivingEntity entitylivingnew = this.getKillCreditOrigin();
 +                if (entitylivingnew != null) {
-+                    this.damageTransferToQueue(entitylivingnew, damageSource);
++                    this.damageTransferToAsync(entitylivingnew, damageSource);
 +                }
 +            // Luminol End - Cross Region Damage trace
              }
          }); // Paper end
          this.postDeathDropItems(deathEvent); // Paper
-@@ -1866,6 +1873,18 @@ public abstract class LivingEntity extends Entity implements Attackable {
+@@ -1863,6 +1868,18 @@ public abstract class LivingEntity extends Entity implements Attackable {
          return deathEvent; // Paper
      }
  
 +    // Luminol Start - Cross Region Damage trace
-+    private void damageTransferToQueue(LivingEntity entity, DamageSource damageSource) {
-+        io.papermc.paper.threadedregions.RegionizedServer.getInstance().taskQueue.queueTickTaskQueue(
-+                (ServerLevel)entity.level(),
-+                ca.spottedleaf.moonrise.common.util.CoordinateUtils.getChunkX(entity.position()), ca.spottedleaf.moonrise.common.util.CoordinateUtils.getChunkZ(entity.position()),
-+                () -> {
-+                    entity.awardKillScore(this, damageSource);
-+                }
-+        );
++    private void damageTransferToAsync(LivingEntity entity, DamageSource damageSource) {
++        entity.getBukkitEntity().taskScheduler.schedule((LivingEntity nmsEntity) -> {
++            try {
++                nmsEntity.awardKillScore(this, damageSource);
++            } catch (Throwable ex) {
++                LOGGER.error(ex.toString(), ex);
++            }
++        }, null, 1L );
 +    }
 +    // Luminol End - Cross Region Damage trace
 +
      protected void dropEquipment(ServerLevel level) {
      }
      protected void postDeathDropItems(org.bukkit.event.entity.EntityDeathEvent event) {} // Paper - method for post death logic that cannot be ran before the event is potentially cancelled
-@@ -2499,6 +2518,18 @@ public abstract class LivingEntity extends Entity implements Attackable {
+@@ -2496,6 +2513,18 @@ public abstract class LivingEntity extends Entity implements Attackable {
          }
      }
  
