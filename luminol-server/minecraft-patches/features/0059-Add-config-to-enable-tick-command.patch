@@ -1,42 +1,50 @@
 From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Helvetica Volubi <suisuroru@blue-millennium.fun>
 Date: Thu, 1 May 2025 22:43:08 +0800
-Subject: [PATCH] Add tick command support
+Subject: [PATCH] Add config to enable tick command
 
 
 diff --git a/io/papermc/paper/threadedregions/RegionizedServer.java b/io/papermc/paper/threadedregions/RegionizedServer.java
-index 1382c695c4991488b113401e231875ddc74f6b01..1684e2d17dcf64876ced40cb83ae0795c922441c 100644
+index 1382c695c4991488b113401e231875ddc74f6b01..68280b07a71dcdb42eaee6f62fbda074813a22e4 100644
 --- a/io/papermc/paper/threadedregions/RegionizedServer.java
 +++ b/io/papermc/paper/threadedregions/RegionizedServer.java
-@@ -286,6 +286,7 @@ public final class RegionizedServer {
+@@ -286,6 +286,11 @@ public final class RegionizedServer {
          this.randomWalk();
           */
          ++this.tickCount;
-+        MinecraftServer.tickRateManager.tick(); // Luminol - Add tick command support
++        // Luminol start - Add a config to enable tick command
++        if (me.earthme.luminol.config.modules.experiment.CommandTickConfig.enabled) {
++            MinecraftServer.tickRateManager.tick();
++        }
++        // Luminol end - Add a config to enable tick command
          // expire invalid click command callbacks
          io.papermc.paper.adventure.providers.ClickCallbackProviderImpl.CALLBACK_MANAGER.handleQueue((int)this.tickCount);
  
-@@ -308,6 +309,9 @@ public final class RegionizedServer {
+@@ -308,6 +313,13 @@ public final class RegionizedServer {
              this.globalTick(world, tickCount);
          }
  
-+        MinecraftServer.tickRateManager.reduceSprintTicks(); // Luminol - Add tick command support
-+        MinecraftServer.tickRateManager.endTickWork(); // Luminol - Add tick command support
++        // Luminol start - Add a config to enable tick command
++        if (me.earthme.luminol.config.modules.experiment.CommandTickConfig.enabled) {
++            MinecraftServer.tickRateManager.reduceSprintTicks();
++            MinecraftServer.tickRateManager.endTickWork();
++        }
++        // Luminol end - Add a config to enable tick command
 +
          // tick connections
          this.tickConnections();
  
-@@ -441,7 +445,7 @@ public final class RegionizedServer {
+@@ -441,7 +453,7 @@ public final class RegionizedServer {
      }
  
      private void tickTime(final ServerLevel world, final int tickCount) {
 -        if (world.tickTime) {
-+        if (world.tickRateManager().runsNormally() && world.tickTime) { // Luminol - Add tick command support
++        if ((!me.earthme.luminol.config.modules.experiment.CommandTickConfig.enabled || world.tickRateManager().runsNormally()) && world.tickTime) { // Luminol - Add a config to enable tick command
              if (world.getGameRules().getBoolean(GameRules.RULE_DAYLIGHT)) {
                  world.setDayTime(world.levelData.getDayTime() + (long)tickCount);
              }
 diff --git a/io/papermc/paper/threadedregions/TickRegionScheduler.java b/io/papermc/paper/threadedregions/TickRegionScheduler.java
-index 7123b3eb2f2e52946b8ef9de993a6828eb0bb6f7..d4d356b8c5bc1c9d2b3e1e0b9d862a58d56410b3 100644
+index 7123b3eb2f2e52946b8ef9de993a6828eb0bb6f7..82948984404a183711588932a4a026dc4c241feb 100644
 --- a/io/papermc/paper/threadedregions/TickRegionScheduler.java
 +++ b/io/papermc/paper/threadedregions/TickRegionScheduler.java
 @@ -31,8 +31,8 @@ public final class TickRegionScheduler {
@@ -50,21 +58,25 @@ index 7123b3eb2f2e52946b8ef9de993a6828eb0bb6f7..d4d356b8c5bc1c9d2b3e1e0b9d862a58
  
      // Folia start - watchdog
      public static final FoliaWatchdogThread WATCHDOG_THREAD = new FoliaWatchdogThread();
-@@ -375,8 +375,19 @@ public final class TickRegionScheduler {
+@@ -375,8 +375,23 @@ public final class TickRegionScheduler {
              final long cpuStart = MEASURE_CPU_TIME ? THREAD_MX_BEAN.getCurrentThreadCpuTime() : 0L;
              final long tickStart = System.nanoTime();
  
 -            // use max(), don't assume that tickStart >= scheduledStart
 -            final int tickCount = Math.max(1, this.tickSchedule.getPeriodsAhead(TIME_BETWEEN_TICKS, tickStart));
-+            // Luminol start - Add tick command support
++            // Luminol start - Add a config to enable tick command
 +            final int tickCount;
-+            if (MinecraftServer.tickRateManager.isSprinting() && MinecraftServer.tickRateManager.checkShouldSprintThisTick()) {
-+                TICK_RATE = net.minecraft.server.commands.TickCommand.MAX_TICKRATE;
-+                TIME_BETWEEN_TICKS = (long) (1_000_000_000L / TICK_RATE);
-+                tickCount = 1;
++            if (me.earthme.luminol.config.modules.experiment.CommandTickConfig.enabled) {
++                if (MinecraftServer.tickRateManager.isSprinting() && MinecraftServer.tickRateManager.checkShouldSprintThisTick()) {
++                    TICK_RATE = net.minecraft.server.commands.TickCommand.MAX_TICKRATE;
++                    TIME_BETWEEN_TICKS = (long) (1_000_000_000L / TICK_RATE);
++                    tickCount = 1;
++                } else {
++                    TICK_RATE = MinecraftServer.tickRateManager.tickrate();
++                    TIME_BETWEEN_TICKS = (long) (1_000_000_000L / TICK_RATE);
++                    tickCount = Math.max(1, this.tickSchedule.getPeriodsAhead(TIME_BETWEEN_TICKS, tickStart));
++                }
 +            } else {
-+                TICK_RATE = MinecraftServer.tickRateManager.tickrate();
-+                TIME_BETWEEN_TICKS = (long) (1_000_000_000L / TICK_RATE);
 +                // use max(), don't assume that tickStart >= scheduledStart
 +                tickCount = Math.max(1, this.tickSchedule.getPeriodsAhead(TIME_BETWEEN_TICKS, tickStart));
 +            }
@@ -72,24 +84,32 @@ index 7123b3eb2f2e52946b8ef9de993a6828eb0bb6f7..d4d356b8c5bc1c9d2b3e1e0b9d862a58
  
              if (!this.tryMarkTicking()) {
                  if (!this.cancelled.get()) {
-@@ -416,6 +427,7 @@ public final class TickRegionScheduler {
+@@ -416,6 +431,11 @@ public final class TickRegionScheduler {
              try {
                  // next start isn't updated until the end of this tick
                  this.tickRegion(tickCount, tickStart, scheduledEnd);
-+                MinecraftServer.tickRateManager.endTickWork(); // Luminol - Add tick command support
++                // Luminol start - Add a config to enable tick command
++                if (me.earthme.luminol.config.modules.experiment.CommandTickConfig.enabled) {
++                    MinecraftServer.tickRateManager.endTickWork();
++                }
++                // Luminol end - Add a config to enable tick command
              } catch (final Throwable thr) {
                  this.scheduler.regionFailed(this, false, thr);
                  // regionFailed will schedule a shutdown, so we should avoid letting this region tick further
 diff --git a/net/minecraft/commands/Commands.java b/net/minecraft/commands/Commands.java
-index cfb37f2e428605965a37dc1eb83f302fe1bd6299..1ab4234fbfbfb346ab01dcadbe41ab3c47bfb289 100644
+index cfb37f2e428605965a37dc1eb83f302fe1bd6299..8f7b28e5688252207ad8ce9f3fb6f9c3b65d1adc 100644
 --- a/net/minecraft/commands/Commands.java
 +++ b/net/minecraft/commands/Commands.java
-@@ -213,7 +213,7 @@ public class Commands {
+@@ -213,7 +213,11 @@ public class Commands {
          //TeamMsgCommand.register(this.dispatcher); // Folia - region threading - TODO later
          TeleportCommand.register(this.dispatcher);
          TellRawCommand.register(this.dispatcher, context);
 -        //TickCommand.register(this.dispatcher); // Folia - region threading - TODO later
-+        TickCommand.register(this.dispatcher); // Folia - region threading - TODO later // Luminol - Add tick command support
++        // Luminol start - Add a config to enable tick command
++        if (me.earthme.luminol.config.modules.experiment.CommandTickConfig.enabled) {
++            TickCommand.register(this.dispatcher); // Folia - region threading - TODO later
++        }
++        // Luminol end - Add a config to enable tick command
          TimeCommand.register(this.dispatcher);
          TitleCommand.register(this.dispatcher, context);
          //TriggerCommand.register(this.dispatcher); // Folia - region threading - TODO later
