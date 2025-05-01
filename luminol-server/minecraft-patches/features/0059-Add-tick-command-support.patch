@@ -1,0 +1,147 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Helvetica Volubi <suisuroru@blue-millennium.fun>
+Date: Thu, 1 May 2025 22:43:08 +0800
+Subject: [PATCH] Add tick command support
+
+
+diff --git a/io/papermc/paper/threadedregions/RegionizedServer.java b/io/papermc/paper/threadedregions/RegionizedServer.java
+index 1382c695c4991488b113401e231875ddc74f6b01..1684e2d17dcf64876ced40cb83ae0795c922441c 100644
+--- a/io/papermc/paper/threadedregions/RegionizedServer.java
++++ b/io/papermc/paper/threadedregions/RegionizedServer.java
+@@ -286,6 +286,7 @@ public final class RegionizedServer {
+         this.randomWalk();
+          */
+         ++this.tickCount;
++        MinecraftServer.tickRateManager.tick(); // Luminol - Add tick command support
+         // expire invalid click command callbacks
+         io.papermc.paper.adventure.providers.ClickCallbackProviderImpl.CALLBACK_MANAGER.handleQueue((int)this.tickCount);
+ 
+@@ -308,6 +309,9 @@ public final class RegionizedServer {
+             this.globalTick(world, tickCount);
+         }
+ 
++        MinecraftServer.tickRateManager.reduceSprintTicks(); // Luminol - Add tick command support
++        MinecraftServer.tickRateManager.endTickWork(); // Luminol - Add tick command support
++
+         // tick connections
+         this.tickConnections();
+ 
+@@ -441,7 +445,7 @@ public final class RegionizedServer {
+     }
+ 
+     private void tickTime(final ServerLevel world, final int tickCount) {
+-        if (world.tickTime) {
++        if (world.tickRateManager().runsNormally() && world.tickTime) { // Luminol - Add tick command support
+             if (world.getGameRules().getBoolean(GameRules.RULE_DAYLIGHT)) {
+                 world.setDayTime(world.levelData.getDayTime() + (long)tickCount);
+             }
+diff --git a/io/papermc/paper/threadedregions/TickRegionScheduler.java b/io/papermc/paper/threadedregions/TickRegionScheduler.java
+index 7123b3eb2f2e52946b8ef9de993a6828eb0bb6f7..d4d356b8c5bc1c9d2b3e1e0b9d862a58d56410b3 100644
+--- a/io/papermc/paper/threadedregions/TickRegionScheduler.java
++++ b/io/papermc/paper/threadedregions/TickRegionScheduler.java
+@@ -31,8 +31,8 @@ public final class TickRegionScheduler {
+         }
+     }
+ 
+-    public static final int TICK_RATE = 20;
+-    public static final long TIME_BETWEEN_TICKS = 1_000_000_000L / TICK_RATE; // ns
++    public static float TICK_RATE = 20; // Luminol - Add tick command support
++    public static long TIME_BETWEEN_TICKS = (long) (1_000_000_000L / TICK_RATE); // ns // Luminol - Add tick command support
+ 
+     // Folia start - watchdog
+     public static final FoliaWatchdogThread WATCHDOG_THREAD = new FoliaWatchdogThread();
+@@ -375,8 +375,19 @@ public final class TickRegionScheduler {
+             final long cpuStart = MEASURE_CPU_TIME ? THREAD_MX_BEAN.getCurrentThreadCpuTime() : 0L;
+             final long tickStart = System.nanoTime();
+ 
+-            // use max(), don't assume that tickStart >= scheduledStart
+-            final int tickCount = Math.max(1, this.tickSchedule.getPeriodsAhead(TIME_BETWEEN_TICKS, tickStart));
++            // Luminol start - Add tick command support
++            final int tickCount;
++            if (MinecraftServer.tickRateManager.isSprinting() && MinecraftServer.tickRateManager.checkShouldSprintThisTick()) {
++                TICK_RATE = net.minecraft.server.commands.TickCommand.MAX_TICKRATE;
++                TIME_BETWEEN_TICKS = (long) (1_000_000_000L / TICK_RATE);
++                tickCount = 1;
++            } else {
++                TICK_RATE = MinecraftServer.tickRateManager.tickrate();
++                TIME_BETWEEN_TICKS = (long) (1_000_000_000L / TICK_RATE);
++                // use max(), don't assume that tickStart >= scheduledStart
++                tickCount = Math.max(1, this.tickSchedule.getPeriodsAhead(TIME_BETWEEN_TICKS, tickStart));
++            }
++            // Luminol end - Add tick command support
+ 
+             if (!this.tryMarkTicking()) {
+                 if (!this.cancelled.get()) {
+@@ -416,6 +427,7 @@ public final class TickRegionScheduler {
+             try {
+                 // next start isn't updated until the end of this tick
+                 this.tickRegion(tickCount, tickStart, scheduledEnd);
++                MinecraftServer.tickRateManager.endTickWork(); // Luminol - Add tick command support
+             } catch (final Throwable thr) {
+                 this.scheduler.regionFailed(this, false, thr);
+                 // regionFailed will schedule a shutdown, so we should avoid letting this region tick further
+diff --git a/net/minecraft/commands/Commands.java b/net/minecraft/commands/Commands.java
+index cfb37f2e428605965a37dc1eb83f302fe1bd6299..1ab4234fbfbfb346ab01dcadbe41ab3c47bfb289 100644
+--- a/net/minecraft/commands/Commands.java
++++ b/net/minecraft/commands/Commands.java
+@@ -213,7 +213,7 @@ public class Commands {
+         //TeamMsgCommand.register(this.dispatcher); // Folia - region threading - TODO later
+         TeleportCommand.register(this.dispatcher);
+         TellRawCommand.register(this.dispatcher, context);
+-        //TickCommand.register(this.dispatcher); // Folia - region threading - TODO later
++        TickCommand.register(this.dispatcher); // Folia - region threading - TODO later // Luminol - Add tick command support
+         TimeCommand.register(this.dispatcher);
+         TitleCommand.register(this.dispatcher, context);
+         //TriggerCommand.register(this.dispatcher); // Folia - region threading - TODO later
+diff --git a/net/minecraft/server/MinecraftServer.java b/net/minecraft/server/MinecraftServer.java
+index 330af9f4de1c72387326816065350e71fe546efe..e62e8b9af7ad3e4454702ac86ad2b27973eba66f 100644
+--- a/net/minecraft/server/MinecraftServer.java
++++ b/net/minecraft/server/MinecraftServer.java
+@@ -267,7 +267,7 @@ public abstract class MinecraftServer extends ReentrantBlockableEventLoop<TickTa
+     private String serverId;
+     public MinecraftServer.ReloadableResources resources;
+     private final StructureTemplateManager structureTemplateManager;
+-    private final ServerTickRateManager tickRateManager;
++    public static ServerTickRateManager tickRateManager; // Luminol - Add tick command support
+     protected WorldData worldData;
+     public PotionBrewing potionBrewing;
+     private FuelValues fuelValues;
+diff --git a/net/minecraft/server/ServerTickRateManager.java b/net/minecraft/server/ServerTickRateManager.java
+index 40338efd1c0e56d869d03f1d0687e7ff0fcbf11a..d0d90a25a10bbecfffceee1992af88c60d14fd87 100644
+--- a/net/minecraft/server/ServerTickRateManager.java
++++ b/net/minecraft/server/ServerTickRateManager.java
+@@ -105,7 +105,7 @@ public class ServerTickRateManager extends TickRateManager {
+             return false;
+         } else if (this.remainingSprintTicks > 0L) {
+             this.sprintTickStartTime = System.nanoTime();
+-            this.remainingSprintTicks--;
++            // this.remainingSprintTicks--; // Luminol - Add tick command support
+             return true;
+         } else {
+             this.finishTickSprint();
+@@ -113,6 +113,12 @@ public class ServerTickRateManager extends TickRateManager {
+         }
+     }
+ 
++    // Luminol start - Add tick command support
++    public void reduceSprintTicks() {
++        this.remainingSprintTicks--;
++    }
++    // Luminol end - Add tick command support
++
+     public void endTickWork() {
+         this.sprintTimeSpend = this.sprintTimeSpend + (System.nanoTime() - this.sprintTickStartTime);
+     }
+diff --git a/net/minecraft/server/commands/TickCommand.java b/net/minecraft/server/commands/TickCommand.java
+index 6b6c8ce49eda6806c8288d70848dd143ba2c4703..5d09d2c8bb45cc10b2a13100793249adc7b5a7e9 100644
+--- a/net/minecraft/server/commands/TickCommand.java
++++ b/net/minecraft/server/commands/TickCommand.java
+@@ -14,7 +14,7 @@ import net.minecraft.server.ServerTickRateManager;
+ import net.minecraft.util.TimeUtil;
+ 
+ public class TickCommand {
+-    private static final float MAX_TICKRATE = 10000.0F;
++    public static final float MAX_TICKRATE = 10000.0F; // Luminol - Add tick command support
+     private static final String DEFAULT_TICKRATE = String.valueOf(20);
+ 
+     public static void register(CommandDispatcher<CommandSourceStack> dispatcher) {
