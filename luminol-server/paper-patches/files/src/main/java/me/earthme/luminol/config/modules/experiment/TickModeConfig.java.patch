@@ -1,0 +1,27 @@
+--- /dev/null
++++ b/src/main/java/me/earthme/luminol/config/modules/experiment/TickModeConfig.java
+@@ -1,0 +_,24 @@
++package me.earthme.luminol.config.modules.experiment;
++
++import me.earthme.luminol.config.ConfigInfo;
++import me.earthme.luminol.config.EnumConfigCategory;
++import me.earthme.luminol.config.IConfigModule;
++
++public class TickModeConfig implements IConfigModule {
++
++    @ConfigInfo(baseName = "mode", comments = """
++            Available Value:
++            FOLIA_DEFAULT
++            PARALLEL_REGION""")
++    public static String mode = "FOLIA_DEFAULT";
++
++    @Override
++    public EnumConfigCategory getCategory() {
++        return EnumConfigCategory.EXPERIMENT;
++    }
++
++    @Override
++    public String getBaseName() {
++        return "tick_mode";
++    }
++}

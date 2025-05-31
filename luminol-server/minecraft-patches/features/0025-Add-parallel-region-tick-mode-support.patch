@@ -1,0 +1,54 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Helvetica Volubi <suisuroru@blue-millennium.fun>
+Date: Sat, 31 May 2025 12:10:57 +0800
+Subject: [PATCH] Add parallel region tick mode support
+
+
+diff --git a/io/papermc/paper/threadedregions/TickRegionScheduler.java b/io/papermc/paper/threadedregions/TickRegionScheduler.java
+index 42684f3d3197e8ecc04a58c986bb397c4cd6326b..7942c06685ec6a3fa7acad42777e337e6b234a5b 100644
+--- a/io/papermc/paper/threadedregions/TickRegionScheduler.java
++++ b/io/papermc/paper/threadedregions/TickRegionScheduler.java
+@@ -255,6 +255,7 @@ public final class TickRegionScheduler {
+         protected final Schedule tickSchedule;
+ 
+         private TickRegionScheduler scheduler;
++        public boolean stillInTick = false; // Luminol - Parallel region tick
+ 
+         public RegionScheduleHandle(final TickRegions.TickRegionData region, final long firstStart) {
+             this.currentTick = 0L;
+@@ -372,6 +373,8 @@ public final class TickRegionScheduler {
+                 return false;
+             }
+ 
++            if (java.util.Objects.equals(me.earthme.luminol.config.modules.experiment.TickModeConfig.mode, "PARALLEL_REGION") && !me.earthme.luminol.utils.ParallelRegionTick.needToTick()) return true; // Luminol - Parallel region tick
++
+             final long cpuStart = MEASURE_CPU_TIME ? THREAD_MX_BEAN.getCurrentThreadCpuTime() : 0L;
+             final long tickStart = System.nanoTime();
+ 
+@@ -428,6 +431,12 @@ public final class TickRegionScheduler {
+ 
+             final FoliaWatchdogThread.RunningTick runningTick = new FoliaWatchdogThread.RunningTick(tickStart, this, Thread.currentThread()); // Folia - region threading
+             WATCHDOG_THREAD.addTick(runningTick); // Folia - region threading
++            // Luminol start - Parallel region tick
++            if (java.util.Objects.equals(me.earthme.luminol.config.modules.experiment.TickModeConfig.mode, "PARALLEL_REGION")) {
++                this.stillInTick = true;
++                me.earthme.luminol.utils.ParallelRegionTick.add(this);
++            }
++            // Luminol end - Parallel region tick
+             try {
+                 // next start isn't updated until the end of this tick
+                 this.tickRegion(tickCount, tickStart, scheduledEnd);
+@@ -437,11 +446,13 @@ public final class TickRegionScheduler {
+                 }
+                 // Luminol end - Add a config to enable tick command
+             } catch (final Throwable thr) {
++                this.stillInTick = false; // Luminol - Parallel region tick
+                 this.scheduler.regionFailed(this, false, thr);
+                 // regionFailed will schedule a shutdown, so we should avoid letting this region tick further
+                 return false;
+             } finally {
+                 WATCHDOG_THREAD.removeTick(runningTick); // Folia - region threading
++                this.stillInTick = false; // Luminol - Parallel region tick
+                 final long tickEnd = System.nanoTime();
+                 final long cpuEnd = MEASURE_CPU_TIME ? THREAD_MX_BEAN.getCurrentThreadCpuTime() : 0L;
+ 

@@ -1,0 +1,29 @@
+--- /dev/null
++++ b/src/main/java/me/earthme/luminol/utils/ParallelRegionTick.java
+@@ -1,0 +_,26 @@
++package me.earthme.luminol.utils;
++
++import io.papermc.paper.threadedregions.TickRegionScheduler;
++
++import java.util.ArrayList;
++import java.util.List;
++
++public class ParallelRegionTick {
++    public static List<TickRegionScheduler.RegionScheduleHandle> tickRegionSchedulers = new ArrayList<>();
++    public static void add(TickRegionScheduler.RegionScheduleHandle ts) {
++        if (tickRegionSchedulers == null) tickRegionSchedulers = new ArrayList<>();
++        tickRegionSchedulers.add(ts);
++    }
++
++    public static void removeAll() {
++        tickRegionSchedulers.clear();
++    }
++
++    public static boolean needToTick() {
++        if (tickRegionSchedulers != null && !tickRegionSchedulers.isEmpty())
++            for (TickRegionScheduler.RegionScheduleHandle tickRegionScheduler : tickRegionSchedulers)
++                if (tickRegionScheduler != null && tickRegionScheduler.stillInTick) return false;
++        removeAll();
++        return true;
++    }
++}
