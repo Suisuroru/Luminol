@@ -42,21 +42,21 @@ public class DialogUtil {
         DialogBuilder builder = new DialogBuilder();
 
         for (Map.Entry<String, Object> entry : map.entrySet()) {
-            String key = entry.getKey();
+            String label = entry.getKey();
             Object value = entry.getValue();
-            String label = key.replace(".", "___").replace("-", "__");
+            String key = label.replace(".", "___").replace("-", "__");
 
             switch (value) {
                 case Boolean boolValue -> {
-                    Input checkbox = createCheckbox(key, label, boolValue, "true", "false");
+                    Input checkbox = createCheckbox(label, key, boolValue, "true", "false");
                     builder.addInput(checkbox);
                 }
                 case String stringValue -> {
-                    Input textbox = createTextInput(key, label, stringValue, 300, true, 2147483647, null);
+                    Input textbox = createTextInput(label, key, stringValue, 300, true, 2147483647, null);
                     builder.addInput(textbox);
                 }
                 case Number numberValue -> {
-                    Input numberInput = createTextInput(key, label, value.toString(), 300, true, 2147483647, null);
+                    Input numberInput = createTextInput(label, key, value.toString(), 300, true, 2147483647, null);
                     builder.addInput(numberInput);
                 }
                 default -> {
