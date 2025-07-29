@@ -116,7 +116,7 @@ public class ConfigCommand extends Command {
             case "open-gui" -> {
                 if (sender instanceof CraftPlayer cPlayer) {
                     final Player player = cPlayer.getHandle();
-                    player.openDialog(DialogUtil.createHolder(name + "config", config.getAllData()));
+                    player.openDialog(DialogUtil.createHolder(name + "config", config.getAllData(), name + "config submit "));
                 } else {
                     sender.sendMessage(
                             Component
@@ -125,7 +125,28 @@ public class ConfigCommand extends Command {
                     );
                 }
             }
-
+            case "submit" -> {
+                StringBuilder sb = new StringBuilder();
+                for (int i = 1; i < args.length - 1; i++) {
+                    sb.append(args[i]).append(" ");
+                }
+                sb.append(args[args.length - 1]);
+                String fullText = sb.toString().replace("___", ".").replace("__", "-");
+                String[] groups = fullText.split("&\\|");
+                for (String group : groups) {
+                    String[] values = group.split("\\|&");
+                    if (values.length == 1) {
+                        config.setConfig(values[0], "");
+                    } else {
+                        config.setConfig(values[0], values[1]);
+                    }
+                }
+                config.reloadAsync().thenAccept(nullValue -> sender.sendMessage(
+                        Component
+                                .text("Apply config update successfully!")
+                                .color(TextColor.color(0, 255, 0))
+                ));
+            }
             default -> sender.sendMessage(
                     Component
                             .text("Unknown action!")

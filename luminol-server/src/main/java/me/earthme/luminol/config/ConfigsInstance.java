@@ -21,6 +21,7 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
+import java.util.stream.Collectors;
 
 public class ConfigsInstance {
     public final Logger logger = LogManager.getLogger();
@@ -207,6 +208,9 @@ public class ConfigsInstance {
                 if (stagedConfigMap.containsKey(fullConfigKeyName)) {
                     actuallyValue = stagedConfigMap.get(fullConfigKeyName);
                     if (actuallyValue == null) actuallyValue = defaultvalueMap.get(fullConfigKeyName);
+                    if (actuallyValue instanceof String v) {
+                        actuallyValue = parseListFromString(v);
+                    }
                     stagedConfigMap.remove(fullConfigKeyName);
                 } else {
                     actuallyValue = configFileInstance.get(fullConfigKeyName);
@@ -242,6 +246,66 @@ public class ConfigsInstance {
     public boolean setConfig(String[] keys, Object value) {
         return setConfig(String.join(".", keys), value);
     }
+
+    public Object parseListFromString(String input) {
+        if (input.startsWith("[") && input.endsWith("]")) {
+            String content = input.substring(1, input.length() - 1).trim();
+
+            if (content.isEmpty()) {
+                return new ArrayList<>();
+            }
+
+            List<String> result = new ArrayList<>();
+            StringBuilder current = new StringBuilder();
+            boolean inQuotes = false;
+            boolean escapeNext = false;
+
+            for (int i = 0; i < content.length(); i++) {
+                char c = content.charAt(i);
+
+                if (escapeNext) {
+                    current.append(c);
+                    escapeNext = false;
+                } else if (c == '\\') {
+                    escapeNext = true;
+                } else if (c == '"') {
+                    inQuotes = !inQuotes;
+                } else if (c == ',' && !inQuotes) {
+                    result.add(current.toString().trim());
+                    current = new StringBuilder();
+                } else {
+                    current.append(c);
+                }
+            }
+
+            if (!current.isEmpty()) {
+                result.add(current.toString().trim());
+            }
+
+            // 处理引号和空白字符
+            return result.stream().map(s -> {
+                if (s.startsWith("\"") && s.endsWith("\"") && s.length() >= 2) {
+                    return s.substring(1, s.length() - 1);
+                }
+                return s;
+            }).collect(Collectors.toList());
+        }
+        return input;
+    }
+
+    public String parseStringFromList(List<?> list) {
+        return list.stream()
+                .map(obj -> {
+                    String str = obj.toString();
+                    if (str.contains(",") || str.contains("\"") || str.contains(" ") || str.contains("[")) {
+                        str = str.replace("\"", "\\\"");
+                        return "\"" + str + "\"";
+                    }
+                    return str;
+                })
+                .collect(Collectors.joining(", ", "[", "]"));
+    }
+
 
     public boolean setConfig(String key, Object value) {
         if (configFileInstance.contains(key) && configFileInstance.get(key) != null) {
@@ -328,7 +392,11 @@ public class ConfigsInstance {
     public Map<String, Object> getAllData() {
         Map<String, Object> result = new HashMap<>();
         for (String key : defaultvalueMap.keySet()) {
-            result.put(key, configFileInstance.get(key));
+            Object value = configFileInstance.get(key);
+            if (value instanceof List list) {
+                value = parseStringFromList(list);
+            }
+            result.put(key, value);
         }
         return result;
     }

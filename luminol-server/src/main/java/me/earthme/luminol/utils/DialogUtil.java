@@ -1,11 +1,12 @@
 package me.earthme.luminol.utils;
 
-import com.mojang.serialization.MapCodec;
+import net.minecraft.commands.functions.StringTemplate;
 import net.minecraft.core.Holder;
-import net.minecraft.network.chat.ClickEvent;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.dialog.*;
 import net.minecraft.server.dialog.action.Action;
+import net.minecraft.server.dialog.action.CommandTemplate;
+import net.minecraft.server.dialog.action.ParsedTemplate;
 import net.minecraft.server.dialog.body.DialogBody;
 import net.minecraft.server.dialog.input.BooleanInput;
 import net.minecraft.server.dialog.input.NumberRangeInput;
@@ -17,15 +18,15 @@ import java.util.Map;
 import java.util.Optional;
 
 public class DialogUtil {
-    public static Holder<Dialog> createHolder(String title, Map<String, Object> map) {
-        return transformToHolder(createDialog(title, map));
+    public static Holder<Dialog> createHolder(String title, Map<String, Object> map, String commandPrefix) {
+        return transformToHolder(createDialog(title, map, commandPrefix));
     }
 
     public static Holder<Dialog> transformToHolder(Dialog dialog) {
         return Holder.direct(dialog);
     }
 
-    public static MultiActionDialog createDialog(String title, List<String> options) {
+    public static MultiActionDialog createDialog(String title, List<String> options, String commandPrefix) {
         DialogBuilder builder = new DialogBuilder();
         for (String option : options) {
             builder.addButton(createButton(Component.translatable(option), 300, Optional.empty()));
@@ -38,13 +39,16 @@ public class DialogUtil {
         return builder.build();
     }
 
-    public static MultiActionDialog createDialog(String title, Map<String, Object> map) {
+    public static MultiActionDialog createDialog(String title, Map<String, Object> map, String commandPrefix) {
         DialogBuilder builder = new DialogBuilder();
+        StringBuilder sb = new StringBuilder();
+        sb.append(commandPrefix);
 
         for (Map.Entry<String, Object> entry : map.entrySet()) {
             String label = entry.getKey();
             Object value = entry.getValue();
             String key = label.replace(".", "___").replace("-", "__");
+            sb.append(key).append("|&$(").append(key).append(")&|");
 
             switch (value) {
                 case Boolean boolValue -> {
@@ -63,8 +67,10 @@ public class DialogUtil {
                 }
             }
         }
-        // TODO: Add actions
-        builder.addButton(createButton(Component.translatable("Confirm"), 150, Optional.empty()))
+        String raw = sb.toString();
+        StringTemplate template = StringTemplate.fromString(raw);
+        CommandTemplate confirmTemplate = new CommandTemplate(new ParsedTemplate(raw, template));
+        builder.addButton(createButton(Component.translatable("Confirm"), 150, Optional.of(confirmTemplate)))
                 .addButton(createButton(Component.translatable("Cancel"), 150, Optional.empty()));
 
         builder.setTitle(title)
@@ -94,7 +100,7 @@ public class DialogUtil {
         ));
     }
 
-    // TODO: this is not work now
+    // TODO: number input is not work now
     public static Input createNumberInput(String label, String key, Number value, NumberRangeInput.RangeInfo rangeInfo) {
         return new Input(key, new NumberRangeInput(
                 300,
