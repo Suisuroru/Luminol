@@ -1,11 +1,14 @@
 package me.earthme.luminol.commands;
 
 import me.earthme.luminol.config.ConfigsInstance;
+import me.earthme.luminol.utils.DialogUtil;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.TextColor;
+import net.minecraft.world.entity.player.Player;
 import org.bukkit.Location;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
+import org.bukkit.craftbukkit.entity.CraftPlayer;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -14,9 +17,11 @@ import java.util.List;
 
 public class ConfigCommand extends Command {
     private ConfigsInstance config;
+    private final String name;
 
     public ConfigCommand(String name) {
         super(name + "config");
+        this.name = name;
         this.setPermission(name + ".commands." + name + "config");
         this.setDescription("Manage config file");
         this.setUsage("/" + name + "config");
@@ -42,6 +47,7 @@ public class ConfigCommand extends Command {
             result.add("set");
             result.add("reset");
             result.add("reload");
+            result.add("open-gui");
         } else if (args.length == 2 && (args[0].equals("query") || args[0].equals("set") || args[0].equals("reset"))) {
             result.addAll(config.completeConfigPath(args[1]));
         }
@@ -105,6 +111,18 @@ public class ConfigCommand extends Command {
                                     .text("Reset Config " + args[1] + " to " + config.getConfig(args[1]) + " successfully!")
                                     .color(TextColor.color(0, 255, 0))
                     ));
+                }
+            }
+            case "open-gui" -> {
+                if (sender instanceof CraftPlayer cPlayer) {
+                    final Player player = cPlayer.getHandle();
+                    player.openDialog(DialogUtil.createHolder(name + "config", config.getAllData()));
+                } else {
+                    sender.sendMessage(
+                            Component
+                                    .text("Only player can use this command!")
+                                    .color(TextColor.color(255, 0, 0))
+                    );
                 }
             }
 

@@ -324,4 +324,12 @@ public class ConfigsInstance {
                 .filter(k -> k.startsWith(currentPath))
                 .toList();
     }
+
+    public Map<String, Object> getAllData() {
+        Map<String, Object> result = new HashMap<>();
+        for (String key : defaultvalueMap.keySet()) {
+            result.put(key, configFileInstance.get(key));
+        }
+        return result;
+    }
 }
