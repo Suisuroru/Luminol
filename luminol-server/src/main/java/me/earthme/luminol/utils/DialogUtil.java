@@ -11,6 +11,7 @@ import net.minecraft.server.dialog.body.DialogBody;
 import net.minecraft.server.dialog.input.BooleanInput;
 import net.minecraft.server.dialog.input.NumberRangeInput;
 import net.minecraft.server.dialog.input.TextInput;
+import org.json.simple.JSONObject;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -41,14 +42,13 @@ public class DialogUtil {
 
     public static MultiActionDialog createDialog(String title, Map<String, Object> map, String commandPrefix) {
         DialogBuilder builder = new DialogBuilder();
-        StringBuilder sb = new StringBuilder();
-        sb.append(commandPrefix);
+        JSONObject valueBuilder = new JSONObject();
 
         for (Map.Entry<String, Object> entry : map.entrySet()) {
             String label = entry.getKey();
             Object value = entry.getValue();
             String key = label.replace(".", "___").replace("-", "__");
-            sb.append(key).append("|&$(").append(key).append(")&|");
+            valueBuilder.put(key, "$(" + key + ")");
 
             switch (value) {
                 case Boolean boolValue -> {
@@ -67,7 +67,7 @@ public class DialogUtil {
                 }
             }
         }
-        String raw = sb.toString();
+        String raw = commandPrefix + valueBuilder.toJSONString();
         StringTemplate template = StringTemplate.fromString(raw);
         CommandTemplate confirmTemplate = new CommandTemplate(new ParsedTemplate(raw, template));
         builder.addButton(createButton(Component.translatable("Confirm"), 150, Optional.of(confirmTemplate)))

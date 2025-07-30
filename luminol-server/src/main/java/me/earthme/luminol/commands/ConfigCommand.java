@@ -1,5 +1,7 @@
 package me.earthme.luminol.commands;
 
+import com.google.common.reflect.TypeToken;
+import com.google.gson.Gson;
 import me.earthme.luminol.config.ConfigsInstance;
 import me.earthme.luminol.utils.DialogUtil;
 import net.kyori.adventure.text.Component;
@@ -12,8 +14,10 @@ import org.bukkit.craftbukkit.entity.CraftPlayer;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 public class ConfigCommand extends Command {
     private ConfigsInstance config;
@@ -132,14 +136,12 @@ public class ConfigCommand extends Command {
                 }
                 sb.append(args[args.length - 1]);
                 String fullText = sb.toString().replace("___", ".").replace("__", "-");
-                String[] groups = fullText.split("&\\|");
-                for (String group : groups) {
-                    String[] values = group.split("\\|&");
-                    if (values.length == 1) {
-                        config.setConfig(values[0], "");
-                    } else {
-                        config.setConfig(values[0], values[1]);
-                    }
+                Gson gson = new Gson();
+                Type type = new TypeToken<Map<String, Object>>() {
+                }.getType();
+                Map<String, String> map = gson.fromJson(fullText, type);
+                for (Map.Entry<String, String> entry : map.entrySet()) {
+                    config.setConfig(entry.getKey(), entry.getValue());
                 }
                 config.reloadAsync().thenAccept(nullValue -> sender.sendMessage(
                         Component
