@@ -282,7 +282,6 @@ public class ConfigsInstance {
                 result.add(current.toString().trim());
             }
 
-            // 处理引号和空白字符
             return result.stream().map(s -> {
                 if (s.startsWith("\"") && s.endsWith("\"") && s.length() >= 2) {
                     return s.substring(1, s.length() - 1);
