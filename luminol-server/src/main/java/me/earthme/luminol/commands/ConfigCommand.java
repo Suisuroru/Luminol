@@ -135,7 +135,7 @@ public class ConfigCommand extends Command {
                     sb.append(args[i]).append(" ");
                 }
                 sb.append(args[args.length - 1]);
-                String fullText = sb.toString().replace("___", ".").replace("__", "-");
+                String fullText = sb.toString();
                 Gson gson = new Gson();
                 Type type = new TypeToken<Map<String, Object>>() {
                 }.getType();

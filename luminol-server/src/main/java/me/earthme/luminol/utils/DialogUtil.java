@@ -48,7 +48,7 @@ public class DialogUtil {
             String label = entry.getKey();
             Object value = entry.getValue();
             String key = label.replace(".", "___").replace("-", "__");
-            valueBuilder.put(key, "$(" + key + ")");
+            valueBuilder.put(label, "$(" + key + ")");
 
             switch (value) {
                 case Boolean boolValue -> {
