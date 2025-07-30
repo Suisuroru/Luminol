@@ -21,29 +21,72 @@ public class CommandDialog {
         String prefix = args.length == 1 ? "" : args[1];
         int dotCount = prefix.length() - prefix.replace(".", "").length();
         if (prefix.equals("full")) {
-            player.openDialog(DialogUtil.createHolder(name + "config", config.getAllData(), name + "config submit "));
-        } else if (config.completeConfigPath(prefix, dotCount + 1).size() == config.completeConfigPath(prefix, dotCount + 2).size()) {
-            player.openDialog(DialogUtil.createHolder(name + "config", config.getData(prefix), name + "config submit "));
-        } else {
-            boolean flag = args.length == 1;
+            player.openDialog(
+                    DialogUtil.createHolder(
+                            name + "config",
+                            config.getAllData(),
+                            name + "config submit "
+                    ));
+        } else if (config.completeConfigPath(prefix, dotCount + 1).size()
+                == config.completeConfigPath(prefix, dotCount + 2).size()) {
+            player.openDialog(
+                    DialogUtil.createHolder(
+                            name + "config",
+                            config.getData(prefix),
+                            name + "config submit "
+                    ));
+        } else if (prefix.endsWith(".") || prefix.isEmpty()) {
             List<String> keyList = config.completeConfigPath(prefix);
             DialogUtil.DialogBuilder builder = new DialogUtil.DialogBuilder();
             for (String key : keyList) {
                 String raw = name + "config open-gui " + key + ".$(missing)";
                 StringTemplate template = StringTemplate.fromString(raw);
                 CommandTemplate commandTemplate = new CommandTemplate(new ParsedTemplate(raw, template));
-                builder.addButton(DialogUtil.createButton(Component.translatable(key), 150, Optional.of(commandTemplate)));
+                builder.addButton(
+                        DialogUtil.createButton(
+                                Component.translatable(key),
+                                150,
+                                Optional.of(commandTemplate)
+                        ));
             }
-            if (flag) {
+            if (args.length == 1) {
                 String raw = name + "config open-gui full$(missing)";
                 StringTemplate template = StringTemplate.fromString(raw);
                 CommandTemplate commandTemplate = new CommandTemplate(new ParsedTemplate(raw, template));
-                builder.addButton(DialogUtil.createButton(Component.translatable("Show all configs"), 150, Optional.of(commandTemplate)));
+                builder.addButton(
+                        DialogUtil.createButton(
+                                Component.translatable("Show all configs"),
+                                150,
+                                Optional.of(commandTemplate)
+                        ));
+            }
+            List<String> singleConfigs = config.getSingleConfig(prefix);
+            if (!singleConfigs.isEmpty()) {
+                String raw = name + "config open-gui " + prefix.substring(0, prefix.length() - 1) + "$(missing)";
+                StringTemplate template = StringTemplate.fromString(raw);
+                CommandTemplate commandTemplate = new CommandTemplate(new ParsedTemplate(raw, template));
+                builder.addButton(
+                        DialogUtil.createButton(
+                                Component.translatable("Show options at this level"),
+                                150,
+                                Optional.of(commandTemplate)
+                        ));
             }
             builder.setTitle(name + "config")
                     .setPause(false)
                     .setColumns(1);
-            player.openDialog(DialogUtil.transformToHolder(builder.build()));
+            player.openDialog(
+                    DialogUtil.transformToHolder(
+                            builder.build()
+                    ));
+        } else {
+            List<String> list = config.getSingleConfig(prefix);
+            player.openDialog(
+                    DialogUtil.createHolder(
+                            name + "config",
+                            config.getData(list),
+                            name + "config submit "
+                    ));
         }
     }
 

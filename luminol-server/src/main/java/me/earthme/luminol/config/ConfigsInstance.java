@@ -387,6 +387,23 @@ public class ConfigsInstance {
         return result;
     }
 
+    public List<String> getSingleConfig(String key) {
+        List<String> list = new ArrayList<>();
+        if (!key.endsWith(".")) {
+            key += ".";
+        }
+        List<String> checkList = completeConfigPath(key);
+        for (String check : checkList) {
+            List<String> checkList1 = completeConfigPath(check + ".");
+            if (checkList1.size() == 1
+                    && check.equals(checkList1.getFirst())
+                    && completeConfigPath(checkList1.getFirst() + ".").isEmpty()) {
+                list.add(checkList1.getFirst());
+            }
+        }
+        return list;
+    }
+
     public List<String> completeConfigPath(String partialPath, int dotIndex) {
         List<String> allPaths = getAllConfigPaths(partialPath);
         Set<String> resultSet = new HashSet<>();
@@ -431,6 +448,18 @@ public class ConfigsInstance {
             Object value = configFileInstance.get(key);
             if (value instanceof List list) {
                 value = parseStringFromList(list);
+            }
+            result.put(key, value);
+        }
+        return result;
+    }
+
+    public Map<String, Object> getData(List<String> list) {
+        Map<String, Object> result = new HashMap<>();
+        for (String key : list) {
+            Object value = configFileInstance.get(key);
+            if (value instanceof List list1) {
+                value = parseStringFromList(list1);
             }
             result.put(key, value);
         }

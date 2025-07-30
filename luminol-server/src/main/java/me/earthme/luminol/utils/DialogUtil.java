@@ -20,11 +20,15 @@ import java.util.Optional;
 
 public class DialogUtil {
     public static Holder<Dialog> createHolder(String title, Map<String, Object> map, String commandPrefix) {
-        return transformToHolder(createDialog(title, map, commandPrefix));
+        return transformToHolder(
+                createDialog(title, map, commandPrefix)
+        );
     }
 
     public static Holder<Dialog> createHolder(String title, List<String> list, String commandPrefix) {
-        return transformToHolder(createDialog(title, list, commandPrefix));
+        return transformToHolder(
+                createDialog(title, list, commandPrefix)
+        );
     }
 
     public static Holder<Dialog> transformToHolder(Dialog dialog) {
@@ -34,7 +38,12 @@ public class DialogUtil {
     public static MultiActionDialog createDialog(String title, List<String> options, String commandPrefix) {
         DialogBuilder builder = new DialogBuilder();
         for (String option : options) {
-            builder.addButton(createButton(Component.translatable(option), 300, Optional.empty()));
+            builder.addButton(
+                    createButton(
+                            Component.translatable(option),
+                            300,
+                            Optional.empty()
+                    ));
         }
 
         builder.setTitle(title)
@@ -51,7 +60,8 @@ public class DialogUtil {
         for (Map.Entry<String, Object> entry : map.entrySet()) {
             String label = entry.getKey();
             Object value = entry.getValue();
-            String key = label.replace(".", "___").replace("-", "__");
+            String key = label.replace(".", "___")
+                    .replace("-", "__");
             valueBuilder.put(label, "$(" + key + ")");
 
             switch (value) {
@@ -74,8 +84,16 @@ public class DialogUtil {
         String raw = commandPrefix + valueBuilder.toJSONString();
         StringTemplate template = StringTemplate.fromString(raw);
         CommandTemplate confirmTemplate = new CommandTemplate(new ParsedTemplate(raw, template));
-        builder.addButton(createButton(Component.translatable("Confirm"), 150, Optional.of(confirmTemplate)))
-                .addButton(createButton(Component.translatable("Cancel"), 150, Optional.empty()));
+        builder.addButton(createButton(
+                        Component.translatable("Confirm"),
+                        150,
+                        Optional.of(confirmTemplate)
+                ))
+                .addButton(createButton(
+                        Component.translatable("Cancel"),
+                        150,
+                        Optional.empty()
+                ));
 
         builder.setTitle(title)
                 .setPause(false)
