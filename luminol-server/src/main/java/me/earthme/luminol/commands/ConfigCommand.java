@@ -48,6 +48,7 @@ public class ConfigCommand extends Command {
             result.add("reset");
             result.add("reload");
             result.add("open-gui");
+            // result.add("submit"); // do not public, you can direct use by open-gui
         } else if (args.length == 2 && (args[0].equals("query") || args[0].equals("set") || args[0].equals("reset"))) {
             result.addAll(config.completeConfigPath(args[1]));
         }

@@ -184,10 +184,6 @@ public class DialogUtil {
             return this.inputs.size();
         }
 
-        public List<Input> getAllInputs() {
-            return this.inputs;
-        }
-
         public DialogBuilder addBody(DialogBody body) {
             this.bodies.add(body);
             return this;
