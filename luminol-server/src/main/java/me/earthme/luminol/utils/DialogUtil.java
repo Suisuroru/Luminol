@@ -23,6 +23,10 @@ public class DialogUtil {
         return transformToHolder(createDialog(title, map, commandPrefix));
     }
 
+    public static Holder<Dialog> createHolder(String title, List<String> list, String commandPrefix) {
+        return transformToHolder(createDialog(title, list, commandPrefix));
+    }
+
     public static Holder<Dialog> transformToHolder(Dialog dialog) {
         return Holder.direct(dialog);
     }

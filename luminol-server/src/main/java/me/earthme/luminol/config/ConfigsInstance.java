@@ -383,6 +383,33 @@ public class ConfigsInstance {
         return result;
     }
 
+    public List<String> completeConfigPath(String partialPath, int dotIndex) {
+        List<String> allPaths = getAllConfigPaths(partialPath);
+        Set<String> resultSet = new HashSet<>();
+
+        for (String path : allPaths) {
+            String remaining = path.substring(partialPath.length());
+            if (remaining.isEmpty()) continue;
+
+            String fullPath = partialPath + remaining;
+            String[] parts = fullPath.split("\\.");
+
+            if (dotIndex == -1 || dotIndex < parts.length) {
+                StringBuilder suggestionBuilder = new StringBuilder();
+                for (int i = 0; i <= dotIndex; i++) {
+                    if (i > 0) {
+                        suggestionBuilder.append(".");
+                    }
+                    suggestionBuilder.append(parts[i]);
+                }
+                String suggestion = suggestionBuilder.toString();
+                resultSet.add(suggestion);
+            }
+        }
+
+        return new ArrayList<>(resultSet);
+    }
+
     private List<String> getAllConfigPaths(String currentPath) {
         return defaultvalueMap.keySet().stream()
                 .filter(k -> k.startsWith(currentPath))
@@ -390,8 +417,13 @@ public class ConfigsInstance {
     }
 
     public Map<String, Object> getAllData() {
+        return getData("");
+    }
+
+    public Map<String, Object> getData(String prefix) {
         Map<String, Object> result = new HashMap<>();
         for (String key : defaultvalueMap.keySet()) {
+            if (!key.startsWith(prefix)) continue;
             Object value = configFileInstance.get(key);
             if (value instanceof List list) {
                 value = parseStringFromList(list);

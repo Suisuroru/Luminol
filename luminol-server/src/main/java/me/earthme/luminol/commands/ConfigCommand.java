@@ -1,9 +1,7 @@
 package me.earthme.luminol.commands;
 
-import com.google.common.reflect.TypeToken;
-import com.google.gson.Gson;
+import me.earthme.luminol.config.CommandDialog;
 import me.earthme.luminol.config.ConfigsInstance;
-import me.earthme.luminol.utils.DialogUtil;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.TextColor;
 import net.minecraft.world.entity.player.Player;
@@ -14,10 +12,8 @@ import org.bukkit.craftbukkit.entity.CraftPlayer;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 public class ConfigCommand extends Command {
     private ConfigsInstance config;
@@ -120,7 +116,7 @@ public class ConfigCommand extends Command {
             case "open-gui" -> {
                 if (sender instanceof CraftPlayer cPlayer) {
                     final Player player = cPlayer.getHandle();
-                    player.openDialog(DialogUtil.createHolder(name + "config", config.getAllData(), name + "config submit "));
+                    CommandDialog.openGui(player, name, config, args);
                 } else {
                     sender.sendMessage(
                             Component
@@ -130,24 +126,7 @@ public class ConfigCommand extends Command {
                 }
             }
             case "submit" -> {
-                StringBuilder sb = new StringBuilder();
-                for (int i = 1; i < args.length - 1; i++) {
-                    sb.append(args[i]).append(" ");
-                }
-                sb.append(args[args.length - 1]);
-                String fullText = sb.toString();
-                Gson gson = new Gson();
-                Type type = new TypeToken<Map<String, Object>>() {
-                }.getType();
-                Map<String, String> map = gson.fromJson(fullText, type);
-                for (Map.Entry<String, String> entry : map.entrySet()) {
-                    config.setConfig(entry.getKey(), entry.getValue());
-                }
-                config.reloadAsync().thenAccept(nullValue -> sender.sendMessage(
-                        Component
-                                .text("Apply config update successfully!")
-                                .color(TextColor.color(0, 255, 0))
-                ));
+                CommandDialog.processSubmit(sender, config, args);
             }
             default -> sender.sendMessage(
                     Component
