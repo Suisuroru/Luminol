@@ -11,11 +11,11 @@ public abstract class CommandMain extends CommandBase {
 
     @Override
     protected boolean canExecute(@NotNull CommandSender sender, @NotNull String[] args) {
-        if (sender.hasPermission(this.permission)) {
+        if (sender.hasPermission(this.getPermission())) {
             return true;
         }
 
-        String currentPermission = this.permission;
+        String currentPermission = this.getPermission();
         for (String arg : args) {
             currentPermission += "." + arg;
             if (sender.hasPermission(currentPermission)) {
