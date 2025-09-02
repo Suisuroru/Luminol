@@ -46,6 +46,10 @@ public abstract class CommandNode {
         this.children.addAll(Stream.of(childrenClasses).map(Supplier::get).toList());
     }
 
+    protected final void children(CommandNode... childrenClasses) {
+        this.children.addAll(List.of(childrenClasses));
+    }
+
     protected abstract ArgumentBuilder<CommandSourceStack, ?> compileBase();
 
     protected boolean execute(CommandContext context) throws CommandSyntaxException {

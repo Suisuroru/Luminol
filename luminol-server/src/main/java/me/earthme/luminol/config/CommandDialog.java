@@ -12,14 +12,20 @@ import net.minecraft.world.entity.player.Player;
 import org.bukkit.command.CommandSender;
 
 import java.lang.reflect.Type;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
 public class CommandDialog {
+    public static void openGui(Player player, String name, ConfigsInstance config) {
+        openGui(player, name, config, "");
+    }
+
     public static void openGui(Player player, String name, ConfigsInstance config, String[] args) {
-        String prefix = args.length == 1 ? "" : args[1];
+        openGui(player, name, config, args.length == 1 ? "" : args[1]);
+    }
+
+    public static void openGui(Player player, String name, ConfigsInstance config, String prefix) {
         int dotCount = prefix.length() - prefix.replace(".", "").length();
         if (prefix.equals("full")) {
             player.openDialog(
@@ -50,7 +56,7 @@ public class CommandDialog {
                                 Optional.of(commandTemplate)
                         ));
             }
-            if (args.length == 1) {
+            if (prefix.isEmpty()) {
                 String raw = name + "config open-gui full$(missing)";
                 StringTemplate template = StringTemplate.fromString(raw);
                 CommandTemplate commandTemplate = new CommandTemplate(new ParsedTemplate(raw, template));
@@ -92,7 +98,7 @@ public class CommandDialog {
     }
 
     public static void processSubmit(CommandSender sender, ConfigsInstance config, String[] args) {
-        String fullText = String.join(" ", Arrays.copyOfRange(args, 1, args.length));
+        String fullText = String.join(" ", args);
         Gson gson = new Gson();
         Type type = new TypeToken<Map<String, String>>() {
         }.getType();
