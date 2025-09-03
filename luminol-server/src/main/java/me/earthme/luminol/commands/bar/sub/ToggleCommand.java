@@ -7,6 +7,7 @@ import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.brigadier.suggestion.Suggestions;
 import com.mojang.brigadier.suggestion.SuggestionsBuilder;
+import me.earthme.luminol.commands.bar.BarCommand;
 import me.earthme.luminol.functions.AbstractGlobalServerBar;
 import me.earthme.luminol.functions.GlobalServerBarManager;
 import net.kyori.adventure.text.Component;
@@ -81,7 +82,7 @@ public class ToggleCommand extends LiteralNode {
         }
 
         @Override
-        protected boolean execute(@NotNull CommandContext context) throws CommandSyntaxException {
+        protected boolean execute(@NotNull CommandContext context) {
             String name = context.getArgument(PlayerArg.class);
             Player player = Bukkit.getServer().getPlayer(name);
             if (player == null) {
@@ -117,6 +118,11 @@ public class ToggleCommand extends LiteralNode {
         }
 
         return builder;
+    }
+
+    @Override
+    public boolean requires(@NotNull CommandSourceStack source) {
+        return BarCommand.hasPermission(source.getSender(), this.bar_name, this.name);
     }
 
     @SuppressWarnings("unchecked")

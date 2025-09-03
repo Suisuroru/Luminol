@@ -42,8 +42,14 @@ public abstract class RootNode extends LiteralNode {
         return super.compile();
     }
 
-    protected static boolean hasPermission(@NotNull CommandSender sender, String subcommand, String permissionBase) {
-        return sender.hasPermission(permissionBase) || sender.hasPermission(permissionBase + "." + subcommand);
+    public static boolean hasPermission(String permissionBase, @NotNull CommandSender sender, String... subcommand) {
+        if (sender.hasPermission(permissionBase)) return true;
+        String currentPermission = permissionBase;
+        for (String sub : subcommand) {
+            currentPermission += "." + sub;
+            if (sender.hasPermission(currentPermission)) return true;
+        }
+        return false;
     }
 
     @Override

@@ -17,8 +17,8 @@ public class BarCommand extends RootNode {
         );
     }
 
-    public static boolean hasPermission(@NotNull CommandSender sender, String subcommand) {
-        return sender.hasPermission(PERM_BASE) || sender.hasPermission(PERM_BASE + "." + subcommand);
+    public static boolean hasPermission(@NotNull CommandSender sender, String... subcommand) {
+        return hasPermission(PERM_BASE, sender, subcommand);
     }
 
     @Override

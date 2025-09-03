@@ -25,7 +25,7 @@ public class ConfigCommand extends RootNode {
         );
     }
 
-    public boolean hasPermission(@NotNull CommandSender sender, String subcommand) {
-        return sender.hasPermission(PERM_BASE) || sender.hasPermission(PERM_BASE + "." + subcommand);
+    public boolean hasPermission(@NotNull CommandSender sender, String... subcommand) {
+        return hasPermission(PERM_BASE, sender, subcommand);
     }
 }
