@@ -57,7 +57,7 @@ public class SetCommand extends ConfigSubcommand {
             return true;
         }
 
-        private static class ValueArgument extends ArgumentNode<String> {
+        private class ValueArgument extends ArgumentNode<String> {
             private final ConfigCommand father;
 
             private ValueArgument(ConfigCommand father) {
@@ -81,18 +81,18 @@ public class SetCommand extends ConfigSubcommand {
 
             @Override
             protected boolean execute(@NotNull CommandContext context) {
-                String path1 = context.getArgument(PathArgument.class);
-                String path2 = context.getArgument(ValueArgument.class);
-                if (father.config.setConfig(path1, path2)) {
+                String path = context.getArgument(PathArgument.class);
+                String value = context.getArgument(ValueArgument.class);
+                if (father.config.setConfig(path, value)) {
                     father.config.reloadAsync().thenAccept(nullValue -> context.getSender().sendMessage(
                             Component
-                                    .text("Set Config " + path1 + " to " + path2 + " successfully!")
+                                    .text("Set Config " + path + " to " + value + " successfully!")
                                     .color(TextColor.color(0, 255, 0))
                     ));
                 } else {
                     context.getSender().sendMessage(
                             Component
-                                    .text("Failed to set config " + path1 + " to " + path2 + "!")
+                                    .text("Failed to set config " + path + " to " + value + "!")
                                     .color(TextColor.color(255, 0, 0))
                     );
                 }

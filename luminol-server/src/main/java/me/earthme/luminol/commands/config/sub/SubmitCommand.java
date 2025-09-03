@@ -18,7 +18,7 @@ public class SubmitCommand extends ConfigSubcommand {
         );
     }
 
-    private static class PathArgument extends ArgumentNode<String> {
+    private class PathArgument extends ArgumentNode<String> {
         protected final ConfigCommand father;
 
         PathArgument(ConfigCommand father) {

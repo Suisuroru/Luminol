@@ -21,8 +21,7 @@ public class ResetCommand extends ConfigSubcommand {
         children(new PathArgument(father));
     }
 
-
-    static class PathArgument extends ArgumentNode<String> {
+    private class PathArgument extends ArgumentNode<String> {
         protected final ConfigCommand father;
 
         PathArgument(ConfigCommand father) {

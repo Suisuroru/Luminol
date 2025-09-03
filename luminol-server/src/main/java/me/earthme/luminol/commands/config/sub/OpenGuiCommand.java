@@ -28,6 +28,7 @@ public class OpenGuiCommand extends ConfigSubcommand {
         );
     }
 
+    @Override
     protected boolean execute(@NotNull CommandContext context) throws CommandSyntaxException {
         if (context.getSender() instanceof CraftPlayer cPlayer) {
             final Player player = cPlayer.getHandle();

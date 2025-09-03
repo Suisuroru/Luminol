@@ -13,6 +13,7 @@ public class ReloadCommand extends ConfigSubcommand {
         super("reload", father);
     }
 
+    @Override
     protected boolean execute(@NotNull CommandContext context) throws CommandSyntaxException {
         father.config.reloadAsync().thenAccept(nullValue -> context.getSender().sendMessage(
                 Component
