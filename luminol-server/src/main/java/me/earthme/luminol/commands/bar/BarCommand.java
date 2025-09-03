@@ -1,5 +1,6 @@
 package me.earthme.luminol.commands.bar;
 
+import me.earthme.luminol.commands.bar.sub.ToggleCommand;
 import org.bukkit.command.CommandSender;
 import org.jetbrains.annotations.NotNull;
 import org.leavesmc.leaves.command.RootNode;
@@ -18,5 +19,33 @@ public class BarCommand extends RootNode {
 
     public static boolean hasPermission(@NotNull CommandSender sender, String subcommand) {
         return sender.hasPermission(PERM_BASE) || sender.hasPermission(PERM_BASE + "." + subcommand);
+    }
+
+    @Override
+    public void register() {
+        super.register();
+        children.forEach(child -> {
+            if (child instanceof BarSubcommand barSubcommand) {
+                barSubcommand.getChildren().forEach(subChild -> {
+                    if (subChild instanceof ToggleCommand toggleCommand) {
+                        toggleCommand.register();
+                    }
+                });
+            }
+        });
+    }
+
+    @Override
+    public void unregister() {
+        super.unregister();
+        children.forEach(child -> {
+            if (child instanceof BarSubcommand barSubcommand) {
+                barSubcommand.getChildren().forEach(subChild -> {
+                    if (subChild instanceof ToggleCommand toggleCommand) {
+                        toggleCommand.unregister();
+                    }
+                });
+            }
+        });
     }
 }
