@@ -33,7 +33,7 @@ public class GlobalServerMemoryBar extends AbstractGlobalServerBar {
         return MembarConfig.memoryBarEnabled;
     }
 
-    public ScheduledTask createBossBarForPlayer(Player apiPlayer) {
+    public ScheduledTask createBossBarForPlayer(@NotNull Player apiPlayer) {
         return apiPlayer.getScheduler().runAtFixedRate(NULL_PLUGIN, (unused) -> {
             final UUID playerUUID = apiPlayer.getUniqueId();
 

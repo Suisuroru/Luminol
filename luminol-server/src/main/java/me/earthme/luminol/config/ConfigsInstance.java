@@ -423,11 +423,8 @@ public class ConfigsInstance {
         }
         List<String> checkList = completeConfigPath(key);
         for (String check : checkList) {
-            List<String> checkList1 = completeConfigPath(check + ".");
-            if (checkList1.size() == 1
-                    && check.equals(checkList1.getFirst())
-                    && completeConfigPath(checkList1.getFirst() + ".").isEmpty()) {
-                list.add(checkList1.getFirst());
+            if (completeConfigPath(check + ".").isEmpty()) {
+                list.add(check);
             }
         }
         return list;
