@@ -1,0 +1,98 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Helvetica Volubi <suisuroru@blue-millennium.fun>
+Date: Fri, 10 Oct 2025 10:28:58 +0800
+Subject: [PATCH] Fix villagers releasing POI
+
+
+diff --git a/net/minecraft/world/entity/ai/behavior/GoToPotentialJobSite.java b/net/minecraft/world/entity/ai/behavior/GoToPotentialJobSite.java
+index f37aee679451dfcaf945aa7a3f668229bff03c3c..5cede7aee3690345c0e4a9003f3fbf47c14c3a97 100644
+--- a/net/minecraft/world/entity/ai/behavior/GoToPotentialJobSite.java
++++ b/net/minecraft/world/entity/ai/behavior/GoToPotentialJobSite.java
+@@ -46,16 +46,32 @@ public class GoToPotentialJobSite extends Behavior<Villager> {
+             BlockPos blockPos = globalPos.pos();
+             ServerLevel level1 = level.getServer().getLevel(globalPos.dimension());
+             if (level1 != null) {
++                // Luminol start
++                //
++                // if tick happened in the same region as the poi, we can process the poi release immediately
++                // so that, some behavior can behaves correctly like vanilla
++                // if cross region is inevitably, we queue the poi release task to the region thread
++                if (ca.spottedleaf.moonrise.common.util.TickThread.isTickThreadFor(level, globalPos.pos())) {
++                    processPoiRelease(level, level1, blockPos);
++                } else {
+                 io.papermc.paper.threadedregions.RegionizedServer.getInstance().taskQueue.queueTickTaskQueue(level1, blockPos.getX() >> 4, blockPos.getZ() >> 4, () -> { // Folia - region threading
+-                PoiManager poiManager = level1.getPoiManager();
+-                if (poiManager.exists(blockPos, holder -> true)) {
+-                    poiManager.release(blockPos);
+-                }
+-
+-                DebugPackets.sendPoiTicketCountPacket(level, blockPos);
++                    processPoiRelease(level, level1, blockPos); // Luminol - move poi release logic to a new method
+                 }); // Folia - region threading
++                }
++                // Luminol end
+             }
+         });
+         entity.getBrain().eraseMemory(MemoryModuleType.POTENTIAL_JOB_SITE);
+     }
++
++    // Luminol start - move poi release logic to a new method
++    public void processPoiRelease(ServerLevel level, ServerLevel level1, BlockPos blockPos) {
++        PoiManager poiManager = level1.getPoiManager();
++        if (poiManager.exists(blockPos, holder -> true)) {
++            poiManager.release(blockPos);
++        }
++
++        DebugPackets.sendPoiTicketCountPacket(level, blockPos);
++    }
++    // Luminol end - move poi release logic to a new method
+ }
+diff --git a/net/minecraft/world/entity/npc/Villager.java b/net/minecraft/world/entity/npc/Villager.java
+index 79242037e868a140513f032e74e8594c0c6ff41c..fffab5584cfdff31afa0ce0fd18151a89c72d904 100644
+--- a/net/minecraft/world/entity/npc/Villager.java
++++ b/net/minecraft/world/entity/npc/Villager.java
+@@ -739,21 +739,37 @@ public class Villager extends AbstractVillager implements ReputationEventHandler
+             this.brain.getMemory(moduleType).ifPresent(pos -> {
+                 ServerLevel level = server.getLevel(pos.dimension());
+                 if (level != null) {
++                    // Luminol start
++                    //
++                    // if tick happened in the same region as the poi, we can process the poi release immediately
++                    // so that, some behavior can behaves correctly like vanilla
++                    // if cross region is inevitably, we queue the poi release task to the region thread
++                    if (ca.spottedleaf.moonrise.common.util.TickThread.isTickThreadFor(level, pos.pos())) {
++                        processPoiRelease(level, moduleType, pos);
++                    } else {
+                     io.papermc.paper.threadedregions.RegionizedServer.getInstance().taskQueue.queueTickTaskQueue( // Folia - region threading
+                             level, pos.pos().getX() >> 4, pos.pos().getZ() >> 4, () -> { // Folia - region threading
+-                    PoiManager poiManager = level.getPoiManager();
+-                    Optional<Holder<PoiType>> type = poiManager.getType(pos.pos());
+-                    BiPredicate<Villager, Holder<PoiType>> biPredicate = POI_MEMORIES.get(moduleType);
+-                    if (type.isPresent() && biPredicate.test(this, type.get())) {
+-                        poiManager.release(pos.pos());
+-                        DebugPackets.sendPoiTicketCountPacket(level, pos.pos());
+-                    }
++                                    processPoiRelease(level, moduleType, pos); // Luminol - move poi release logic to a new method
+                     }); // Folia - region threading
++                    }
++                    // Luminol end
+                 }
+             });
+         }
+     }
+ 
++    // Luminol start - move poi release logic to a new method
++    private void processPoiRelease(ServerLevel level, MemoryModuleType<GlobalPos> moduleType, GlobalPos pos) {
++        PoiManager poiManager = level.getPoiManager();
++        Optional<Holder<PoiType>> type = poiManager.getType(pos.pos());
++        BiPredicate<Villager, Holder<PoiType>> biPredicate = POI_MEMORIES.get(moduleType);
++        if (type.isPresent() && biPredicate.test(this, type.get())) {
++            poiManager.release(pos.pos());
++            DebugPackets.sendPoiTicketCountPacket(level, pos.pos());
++        }
++    }
++    // Luminol end - move poi release logic to a new method
++
+     @Override
+     public boolean canBreed() {
+         return this.foodLevel + this.countFoodPointsInInventory() >= 12 && !this.isSleeping() && this.getAge() == 0;
