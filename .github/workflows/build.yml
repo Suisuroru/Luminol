@@ -104,8 +104,24 @@ jobs:
             echo "unexpect=true" >> $GITHUB_ENV
           fi
 
+      - name: Prepare Push To Repo
+        if: ( github.event_name != 'pull_request' && !( env.unexpect == 'true' ) && env.flag_release == 'true' && env.release_exists != 'true' && !( inputs.force-release == '2' )) && inputs.force-push != '1' && inputs.force-push != '2'
+        continue-on-error: true
+        run: |
+          sh scripts/compareAPIStage1.sh
+          sh scripts/getVersionNumber.sh
+          sh scripts/compareAPIStage2.sh
+          sh scripts/pushAPIVersionInfo.sh
+
+        env:
+          PUSH_TOKEN: ${{ secrets.PUSH_TOKEN }}
+          PUSH_WEB: ${{ secrets.PUSH_WEB }}
+          SHA: ${{ env.commit_id }}
+          PROJECT_NAME: ${{ env.project_id_b }}
+          MC_VERSION: ${{ env.mcversion }}
+
       - name: Publish To Repo
-        if: ( github.event_name != 'pull_request' && !( env.unexpect == 'true' ) && env.flag_release == 'true' && env.release_exists != 'true' && !( inputs.force-release == '2' )) || inputs.force-push == '1'
+        if: (( github.event_name != 'pull_request' && !( env.unexpect == 'true' ) && env.flag_release == 'true' && env.release_exists != 'true' && !( inputs.force-release == '2' )) && env.need_push_API == 'true') || inputs.force-push == '1'
         continue-on-error: true
         run: ./gradlew --refresh-dependencies generateDevelopmentBundle publish -PpublishDevBundle=true
         env:
@@ -128,7 +144,7 @@ jobs:
         uses: ncipollo/release-action@v1
         with:
           tag: ${{ env.tag }}
-          name: ${{ env.project_id_b }} ${{ env.mcversion }} - ${{ env.commit_id }}${{ env.release_count }}
+          name: ${{ env.project_id_b }} ${{ env.mcversion }} - ${{ env.SUBVERSION }}${{ env.release_count }}
           body: |
             📦Version: `${{ env.mcversion }}` | Commit ${{ env.commit_id }} [![download](https://img.shields.io/github/downloads/LuminolMC/${{ env.project_id }}/${{ env.tag }}/total?color=red&style=flat-square)](https://github.com/LuminolMC/${{ env.project_id }}/releases/download/${{ env.tag }}/${{ env.jar }})
             This release is automatically compiled by GitHub Actions
@@ -136,6 +152,8 @@ jobs:
             > ${{ github.ref_name }}
             ### Commit Message
             ${{ env.commit_msg }}
+            ### API Version
+            > ${{ env.api_md5 }}
           artifacts: |
             ${{ env.jar_dir }}
             harebell/build/libs/harebell.jar
@@ -149,7 +167,7 @@ jobs:
         uses: ncipollo/release-action@v1
         with:
           tag: ${{ env.tag }}
-          name: ${{ env.project_id_b }} ${{ env.mcversion }} - ${{ env.commit_id }}${{ env.release_count }}
+          name: ${{ env.project_id_b }} ${{ env.mcversion }} - ${{ env.SUBVERSION }}${{ env.release_count }}
           body: |
             📦Version: `${{ env.mcversion }}` | Commit ${{ env.commit_id }} [![download](https://img.shields.io/github/downloads/LuminolMC/${{ env.project_id }}/${{ env.tag }}/total?color=red&style=flat-square)](https://github.com/LuminolMC/${{ env.project_id }}/releases/download/${{ env.tag }}/${{ env.jar }})
             This release is automatically compiled by GitHub Actions
@@ -159,6 +177,8 @@ jobs:
             > ${{ github.ref_name }}
             ### Commit Message
             ${{ env.commit_msg }}
+            ### API Version
+            > ${{ env.api_md5 }}
           artifacts: |
             ${{ env.jar_dir }}
             harebell/build/libs/harebell.jar
