@@ -2,7 +2,7 @@
 
 # Clone GitHub repository
 echo "Cloning repository..."
-git clone https://github.com/Suisuroru/VersionReleaseSystem.git
+git clone "https://x-access-token:${PAT_SECRET}@github.com/ORGANIZATION/REPO_NAME.git"
 echo "Switching to project directory..."
 cd VersionReleaseSystem
 
